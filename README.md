@@ -34,6 +34,31 @@ pip install -r mm_kb_builder/requirements.txt
 ```
 
 
+## Configuration
+
+Set the `OPENAI_API_KEY` environment variable so the applications can access the OpenAI API:
+
+```bash
+# Windows
+set OPENAI_API_KEY=your_api_key_here
+
+# macOS/Linux
+export OPENAI_API_KEY=your_api_key_here
+```
+
+## Running the app
+
+Launch the unified interface using the helper scripts at the repository root:
+
+```bash
+# Windows
+run_app.bat
+
+# macOS/Linux
+./run_app.sh
+```
+
+
 ## Integration Plan
 
 See [docs/integration_plan.md](docs/integration_plan.md) for an overview of the integration phases.
