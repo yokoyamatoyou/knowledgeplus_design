@@ -943,7 +943,7 @@ def create_structured_metadata(analysis_result, user_additions, filename):
         "cad_metadata": analysis_result.get('cad_metadata', {})
     }
 
-def save_unified_knowledge_item(image_id, analysis_result, user_additions, embedding, filename, image_base64=None):
+def save_unified_knowledge_item(image_id, analysis_result, user_additions, embedding, filename, image_base64=None, original_bytes=None):
     """★ 統一ナレッジアイテムとして保存（RAGシステム互換構造）"""
     try:
         search_chunk = create_comprehensive_search_chunk(analysis_result, user_additions)
@@ -968,6 +968,7 @@ def save_unified_knowledge_item(image_id, analysis_result, user_additions, embed
             embedding=embedding,
             metadata=full_metadata,
             original_filename=filename,
+            original_bytes=original_bytes,
             image_bytes=image_bytes,
         )
         file_link = paths.get("original_file_path", "")
@@ -1044,6 +1045,8 @@ with tab1:
                 status_text = st.empty()
                 
                 for i, uploaded_file in enumerate(uploaded_files):
+                    file_bytes = uploaded_file.getvalue()
+                    uploaded_file.seek(0)
                     status_text.text(f"処理中: {uploaded_file.name} ({i+1}/{len(uploaded_files)})")
                     
                     file_extension = uploaded_file.name.split('.')[-1].lower()
@@ -1078,7 +1081,8 @@ with tab1:
                             'analysis': analysis,
                             'cad_metadata': cad_metadata,
                             'user_additions': {},
-                            'is_finalized': False
+                            'is_finalized': False,
+                            'original_bytes': file_bytes,
                         }
                         
                         file_type_display = "CADファイル" if is_cad_file else "画像"
@@ -1292,7 +1296,8 @@ with tab2:
                                         current_user_additions,
                                         embedding,
                                         image_data['filename'],
-                                        image_data['image_base64']
+                                        image_data['image_base64'],
+                                        original_bytes=image_data.get('original_bytes')
                                     )
                                     
                                     if success:
