@@ -26,3 +26,7 @@ pip install -r knowledge_gpt_app/requirements.txt
 pip install -r mm_kb_builder/requirements.txt
 ```
 
+
+## Integration Plan
+
+See [docs/integration_plan.md](docs/integration_plan.md) for an overview of the integration phases.
