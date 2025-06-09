@@ -510,7 +510,7 @@ def get_openai_client_for_kb_search():
 if __name__ == "__main__":
     print("knowledge_search.py を直接実行します (テストモード)")
     script_dir = Path(__file__).resolve().parent
-    default_test_kb_relative_path = "../rag_knowledge_base/default_kb"
+    default_test_kb_relative_path = "../knowledge_base/default_kb"
     test_kb_full_path = (script_dir / default_test_kb_relative_path).resolve()
     print(f"テスト用ナレッジベースのパス: {test_kb_full_path}")
     if not test_kb_full_path.exists() or not test_kb_full_path.is_dir():

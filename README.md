@@ -8,6 +8,13 @@ This repository contains two related Streamlit applications:
 Each folder includes its own `requirements.txt`. A consolidated list of
 all dependencies is provided at the repository root for convenience.
 
+## Knowledge base location
+
+Both apps now use a single `knowledge_base/` directory at the repository root.
+If you were storing data in the previous `rag_knowledge_base` or
+`multimodal_data` folders, move those contents into `knowledge_base/` before
+upgrading.
+
 ## Installation
 
 Create a virtual environment and install the packages:
