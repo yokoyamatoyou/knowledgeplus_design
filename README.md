@@ -64,3 +64,10 @@ run_app.bat
 ## Integration Plan
 
 See [docs/integration_plan.md](docs/integration_plan.md) for an overview of the integration phases.
+
+### Phase 3 Notes
+
+Processed chunks, embeddings and metadata are now stored under
+`knowledge_base/<kb_name>` using `save_processed_data()`. The metadata JSON
+includes these paths so that other components can access the original files.
+Whenever a chunk is stored the chatbot search index is refreshed automatically.

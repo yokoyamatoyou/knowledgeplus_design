@@ -23,6 +23,13 @@ This document outlines the major phases for integrating the knowledge base build
   - Maintain links between original files and processed data.
   - Update indexing so that the chatbot can access new entries.
 
+### Phase 3 Implementation
+
+`save_processed_data()` now writes files under `knowledge_base/<kb_name>` and
+returns their paths. These paths are stored inside each chunk's metadata JSON so
+that the chatbot can provide download links. When a chunk or image is saved the
+corresponding search index is refreshed via `refresh_search_engine()`.
+
 ## FAQ Generation
 - **Objective:** Automatically create frequently asked questions from the knowledge base.
 - **Key tasks:**

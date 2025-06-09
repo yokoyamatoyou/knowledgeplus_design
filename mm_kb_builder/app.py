@@ -18,6 +18,7 @@ from shared.upload_utils import (
     BASE_KNOWLEDGE_DIR as SHARED_KB_DIR,
     ensure_openai_key,
 )
+from knowledge_gpt_app.app import refresh_search_engine
 
 # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
 # インテル風デザインテーマ適用
@@ -971,6 +972,7 @@ def save_unified_knowledge_item(image_id, analysis_result, user_additions, embed
             original_bytes=original_bytes,
             image_bytes=image_bytes,
         )
+        refresh_search_engine(kb_name)
         file_link = paths.get("original_file_path", "")
 
         return True, {
