@@ -1165,7 +1165,7 @@ def search_multiple_knowledge_bases(query, kb_names, top_k=5, threshold=0.15, cl
     final_results = all_results[:top_k] 
     return final_results, len(final_results) == 0
 
-def semantic_chunking(text, overlap_ratio, sudachi_mode, document_type, knowledge_base_name, client=None):
+def semantic_chunking(text, overlap_ratio, sudachi_mode, document_type, knowledge_base_name, client=None, original_filename=None, original_bytes=None):
     if client is None:
         client = get_openai_client()
         if client is None:
@@ -1178,6 +1178,13 @@ def semantic_chunking(text, overlap_ratio, sudachi_mode, document_type, knowledg
         kb_dir_path = RAG_BASE_DIR / knowledge_base_name
         kb_dir_path.mkdir(parents=True, exist_ok=True)
         logger.info(f"ナレッジベースディレクトリ: {kb_dir_path}")
+        if original_filename and original_bytes:
+            save_processed_data(
+                kb_dir_path.name,
+                f"source_{uuid.uuid4()}",
+                original_filename=original_filename,
+                original_bytes=original_bytes,
+            )
         with st.status("フォルダ構造を生成中...", expanded=False) as status_fs:
             folder_structure = generate_folder_structure(text[:min(len(text),5000)], document_type, client)
             folder_name = folder_structure.get("folder_name")
@@ -1322,6 +1329,8 @@ if app_mode == "ナレッジベース管理":
         if uploaded_file is not None and kb_name_input:
             if st.button("◎ ナレッジベース構築実行", key="execute_chunking_button_main", type="primary", help="上記の設定でナレッジベースの構築を開始します。"):
                 with st.spinner("ナレッジベース構築処理を開始します..."):
+                    file_bytes = uploaded_file.getvalue()
+                    uploaded_file.seek(0)
                     main_content_for_chunking = read_file(uploaded_file)
                 if main_content_for_chunking:
                     client_for_pipeline = get_openai_client()
@@ -1336,12 +1345,14 @@ if app_mode == "ナレッジベース管理":
                                     st.session_state['_last_uploaded_filename_for_param_rec'] = uploaded_file.name
                                     st.info(f"推奨オーバーラップ率: {rec_params_val.get('overlap')}% / 推奨Sudachiモード: {rec_params_val.get('sudachi_mode')}")
                         st.session_state['processed_chunks'] = semantic_chunking(
-                            main_content_for_chunking, 
-                            st.session_state['overlap_ratio'], 
-                            st.session_state['sudachi_mode'], 
-                            final_document_type_selected, 
+                            main_content_for_chunking,
+                            st.session_state['overlap_ratio'],
+                            st.session_state['sudachi_mode'],
+                            final_document_type_selected,
                             st.session_state['knowledge_base_name'],
-                            client_for_pipeline
+                            client_for_pipeline,
+                            original_filename=uploaded_file.name,
+                            original_bytes=file_bytes,
                         )
                 else:
                     st.error("ファイル内容の読み込みに失敗したため、処理を中止しました。")

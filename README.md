@@ -50,7 +50,7 @@ The applications will fail to start if this variable is missing.
 
 ## Running the app
 
-Launch the unified interface using the helper scripts at the repository root:
+Launch the unified interface using the helper scripts at the repository root. These scripts run `unified_app.py` which accepts documents, images and CAD files in one place:
 
 ```bash
 # Windows
