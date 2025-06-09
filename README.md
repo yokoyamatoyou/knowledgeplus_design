@@ -46,6 +46,8 @@ set OPENAI_API_KEY=your_api_key_here
 export OPENAI_API_KEY=your_api_key_here
 ```
 
+The applications will fail to start if this variable is missing.
+
 ## Running the app
 
 Launch the unified interface using the helper scripts at the repository root:

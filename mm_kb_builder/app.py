@@ -13,6 +13,11 @@ from pathlib import Path
 import logging
 import tempfile
 import shutil
+from shared.upload_utils import (
+    save_processed_data,
+    BASE_KNOWLEDGE_DIR as SHARED_KB_DIR,
+    ensure_openai_key,
+)
 
 # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
 # インテル風デザインテーマ適用
@@ -448,7 +453,7 @@ SUPPORTED_DOCUMENT_TYPES = ['pdf']
 SUPPORTED_CAD_TYPES = ['dxf', 'stl', 'ply', 'obj', 'step', 'stp', 'iges', 'igs', '3ds']
 
 # 共通ナレッジベースディレクトリ
-BASE_KNOWLEDGE_DIR = Path(current_dir).parent / "knowledge_base"
+BASE_KNOWLEDGE_DIR = SHARED_KB_DIR
 BASE_KNOWLEDGE_DIR.mkdir(exist_ok=True)
 
 # データディレクトリ
@@ -466,10 +471,7 @@ if 'current_editing_id' not in st.session_state:
 @st.cache_resource
 def get_openai_client():
     try:
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            st.error("OPENAI_API_KEY環境変数が設定されていません")
-            return None
+        api_key = ensure_openai_key()
         return OpenAI(api_key=api_key)
     except Exception as e:
         st.error(f"OpenAIクライアント初期化エラー: {e}")
@@ -944,158 +946,42 @@ def create_structured_metadata(analysis_result, user_additions, filename):
 def save_unified_knowledge_item(image_id, analysis_result, user_additions, embedding, filename, image_base64=None):
     """★ 統一ナレッジアイテムとして保存（RAGシステム互換構造）"""
     try:
-        # チャンクとメタデータ作成
         search_chunk = create_comprehensive_search_chunk(analysis_result, user_additions)
         structured_metadata = create_structured_metadata(analysis_result, user_additions, filename)
-        
-        # ナレッジベース名（デフォルト）
         kb_name = "multimodal_knowledge_base"
-        kb_dir = DATA_DIR / kb_name
-        
-        # ディレクトリ構造作成（既存RAGシステム互換）
-        chunks_dir = kb_dir / "chunks"
-        embeddings_dir = kb_dir / "embeddings"
-        metadata_dir = kb_dir / "metadata"
-        images_dir = kb_dir / "images"
-        files_dir = kb_dir / "files"
-        
-        for dir_path in [chunks_dir, embeddings_dir, metadata_dir, images_dir, files_dir]:
-            dir_path.mkdir(parents=True, exist_ok=True)
-        
-        # ファイルリンク生成（元ファイルへのアクセス）
-        file_extension = filename.split('.')[-1].lower() if '.' in filename else ''
-        original_file_path = files_dir / f"{image_id}.{file_extension}"
-        file_link = f"./files/{image_id}.{file_extension}"  # 相対パス
-        
-        # 1. チャンクデータ保存（chunks/）
-        chunk_data = {
-            "id": image_id,
-            "content": search_chunk,
-            "filename": filename,
-            "created_at": datetime.now().isoformat(),
-            "type": "image_knowledge",
-            "file_link": file_link,  # ★ ファイルリンク追加
-            "chunk_metadata": {
-                "keywords": structured_metadata.get('keywords', []),
-                "search_terms": structured_metadata.get('search_terms', []),
-                "category": structured_metadata.get('category', ''),
-                "importance": structured_metadata.get('importance', '中')
-            }
-        }
-        
-        chunk_file_path = chunks_dir / f"{image_id}.json"
-        with open(chunk_file_path, 'w', encoding='utf-8') as f:
-            json.dump(chunk_data, f, ensure_ascii=False, indent=2)
-        
-        # 2. ベクトルデータ保存（embeddings/）
-        embedding_data = {
-            "id": image_id,
-            "vector": embedding,
-            "model": EMBEDDING_MODEL,
-            "dimensions": len(embedding) if embedding else 0,
-            "created_at": datetime.now().isoformat(),
-            "file_link": file_link  # ★ ファイルリンク追加
-        }
-        
-        embedding_file_path = embeddings_dir / f"{image_id}.json"
-        with open(embedding_file_path, 'w', encoding='utf-8') as f:
-            json.dump(embedding_data, f, ensure_ascii=False, indent=2)
-        
-        # 3. メタデータ保存（metadata/）
+        image_bytes = base64.b64decode(image_base64) if image_base64 else None
+
         full_metadata = {
-            "id": image_id,
             "filename": filename,
-            "content_type": "image/jpeg",
-            "created_at": datetime.now().isoformat(),
-            "file_link": file_link,  # ★ ファイルリンク追加
-            
-            # 検索結果表示用メタデータ
             "display_metadata": structured_metadata,
-            
-            # AI解析の詳細データ
             "analysis_data": {
                 "gpt_analysis": analysis_result,
                 "cad_metadata": analysis_result.get('cad_metadata', {}),
-                "user_additions": user_additions
+                "user_additions": user_additions,
             },
-            
-            # 統計情報
-            "stats": {
-                "keywords_count": len(structured_metadata.get('keywords', [])),
-                "search_terms_count": len(structured_metadata.get('search_terms', [])),
-                "detected_elements_count": len(structured_metadata.get('detected_elements', [])),
-                "chunk_length": len(search_chunk),
-                "vector_dimensions": len(embedding) if embedding else 0
-            }
         }
-        
-        metadata_file_path = metadata_dir / f"{image_id}.json"
-        with open(metadata_file_path, 'w', encoding='utf-8') as f:
-            json.dump(full_metadata, f, ensure_ascii=False, indent=2)
-        
-        # 4. 画像ファイル保存（images/）
-        if image_base64:
-            try:
-                image_bytes = base64.b64decode(image_base64)
-                image_file_path = images_dir / f"{image_id}.jpg"
-                with open(image_file_path, 'wb') as f:
-                    f.write(image_bytes)
-            except Exception as e:
-                logger.warning(f"画像ファイル保存エラー: {e}")
-        
-        # 5. 元ファイル情報（files/）- 実際のファイルは別途コピーが必要
-        file_info = {
-            "id": image_id,
-            "original_filename": filename,
-            "file_extension": file_extension,
-            "file_path": str(original_file_path),
-            "file_link": file_link,
-            "created_at": datetime.now().isoformat(),
-            "note": "実際のファイルは手動でコピーしてください"
-        }
-        
-        file_info_path = files_dir / f"{image_id}_info.json"
-        with open(file_info_path, 'w', encoding='utf-8') as f:
-            json.dump(file_info, f, ensure_ascii=False, indent=2)
-        
-        # 6. ナレッジベース全体の情報更新
-        kb_metadata_path = kb_dir / "kb_metadata.json"
-        try:
-            if kb_metadata_path.exists():
-                with open(kb_metadata_path, 'r', encoding='utf-8') as f:
-                    kb_metadata = json.load(f)
-            else:
-                kb_metadata = {
-                    "kb_name": kb_name,
-                    "created_at": datetime.now().isoformat(),
-                    "total_items": 0,
-                    "item_types": {"image": 0, "text_chunk": 0}
-                }
-            
-            # 統計更新
-            kb_metadata["total_items"] += 1
-            kb_metadata["item_types"]["image"] += 1
-            kb_metadata["last_updated"] = datetime.now().isoformat()
-            
-            with open(kb_metadata_path, 'w', encoding='utf-8') as f:
-                json.dump(kb_metadata, f, ensure_ascii=False, indent=2)
-                
-        except Exception as e:
-            logger.warning(f"KB メタデータ更新エラー: {e}")
-        
-        # 統合用レスポンス
-        unified_item = {
+
+        paths = save_processed_data(
+            kb_name,
+            image_id,
+            chunk_text=search_chunk,
+            embedding=embedding,
+            metadata=full_metadata,
+            original_filename=filename,
+            image_bytes=image_bytes,
+        )
+        file_link = paths.get("original_file_path", "")
+
+        return True, {
             "id": image_id,
             "type": "image",
             "filename": filename,
+            "chunk_path": paths.get("chunk_path"),
+            "embedding_path": paths.get("embedding_path"),
+            "metadata_path": paths.get("metadata_path"),
+            "image_path": paths.get("image_path"),
             "file_link": file_link,
-            "chunk_path": str(chunk_file_path),
-            "embedding_path": str(embedding_file_path),
-            "metadata_path": str(metadata_file_path),
-            "stats": full_metadata["stats"]
         }
-        
-        return True, unified_item
         
     except Exception as e:
         logger.error(f"ナレッジデータ保存エラー: {e}")

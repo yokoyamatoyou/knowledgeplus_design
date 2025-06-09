@@ -25,6 +25,11 @@ from nltk.corpus import stopwords
 import time
 from sentence_transformers import SentenceTransformer
 from rank_bm25 import BM25Okapi
+from shared.upload_utils import (
+    save_processed_data,
+    BASE_KNOWLEDGE_DIR as SHARED_KB_DIR,
+    ensure_openai_key,
+)
 
 # カスタムCSS - Intel風デザイン
 def apply_intel_theme():
@@ -406,15 +411,9 @@ logger = logging.getLogger('rag_tool')
 # OpenAIクライアントを取得する関数 (app.py内で共通して使用)
 @st.cache_resource
 def get_openai_client():
-    """
-    OpenAIクライアントを取得する関数
-    """
+    """OpenAIクライアントを取得する関数"""
     try:
-        api_key = os.getenv("OPENAI_API_KEY")
-        if not api_key:
-            logger.warning("警告: OPENAI_API_KEYが環境変数に設定されていません")
-            st.error("OpenAI APIキーが設定されていません。環境変数 OPENAI_API_KEY を設定してください。")
-            return None
+        api_key = ensure_openai_key()
         client = OpenAI(api_key=api_key)
         logger.info("OpenAIクライアントの取得に成功しました。")
         return client
@@ -428,7 +427,7 @@ GPT4_MODEL = "gpt-4.1-2025-04-14"
 GPT4_MINI_MODEL = "gpt-4.1-mini-2025-04-14"
 
 # 共通ナレッジベースディレクトリ
-BASE_KNOWLEDGE_DIR = Path(current_dir).parent / "knowledge_base"
+BASE_KNOWLEDGE_DIR = SHARED_KB_DIR
 BASE_KNOWLEDGE_DIR.mkdir(exist_ok=True)
 print(f"Knowledge base directory: {BASE_KNOWLEDGE_DIR}")
 
@@ -1045,22 +1044,18 @@ def create_overlapping_chunks(segments, overlap_ratio_percent=15, max_chunk_toke
 
 def save_chunk_to_files(chunk_content, chunk_id, folder_name, base_filename, metadata, embedding, kb_dir_path: Path):
     try:
-        chunks_dir = kb_dir_path / "chunks"
-        metadata_dir = kb_dir_path / "metadata"
-        embeddings_dir = kb_dir_path / "embeddings"
-        chunks_dir.mkdir(parents=True, exist_ok=True)
-        metadata_dir.mkdir(parents=True, exist_ok=True)
-        embeddings_dir.mkdir(parents=True, exist_ok=True)
-        chunk_filename = f"{base_filename}_{chunk_id}.txt"
-        metadata_filename = f"metadata_{chunk_id}.json"
-        embedding_filename = f"embedding_{chunk_id}.pkl"
-        with open(chunks_dir / chunk_filename, 'w', encoding='utf-8') as f: f.write(chunk_content)
-        with open(metadata_dir / metadata_filename, 'w', encoding='utf-8') as f: json.dump(metadata, f, ensure_ascii=False, indent=2)
-        if embedding is not None:
-            with open(embeddings_dir / embedding_filename, 'wb') as f: pickle.dump({"embedding": embedding}, f)
-        else:
-            logger.warning(f"チャンク {chunk_id} の埋め込みがNoneのため、embeddingファイルを保存しません。")
-        return [str(chunks_dir / chunk_filename), str(metadata_dir / metadata_filename), str(embeddings_dir / embedding_filename) if embedding is not None else None]
+        paths = save_processed_data(
+            kb_dir_path.name,
+            chunk_id,
+            chunk_text=chunk_content,
+            embedding=embedding,
+            metadata=metadata,
+        )
+        return [
+            paths.get("chunk_path"),
+            paths.get("metadata_path"),
+            paths.get("embedding_path"),
+        ]
     except Exception as e:
         logger.error(f"チャンク保存エラー ({chunk_id}): {e}", exc_info=True)
         st.error(f"チャンクの保存中にエラーが発生しました ({chunk_id}): {e}")
