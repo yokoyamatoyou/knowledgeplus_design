@@ -778,6 +778,15 @@ def get_search_engine(kb_name: str) -> HybridSearchEngine:
             return None
     return st.session_state.search_engines[kb_name]
 
+def refresh_search_engine(kb_name: str) -> None:
+    """Rebuild indexes for a knowledge base if a search engine is available."""
+    engine = get_search_engine(kb_name)
+    if engine is not None:
+        try:
+            engine.reindex()
+        except Exception as e:
+            logger.error(f"Failed to refresh index for '{kb_name}': {e}", exc_info=True)
+
 def list_knowledge_bases():
     kb_list = []
     if RAG_BASE_DIR.exists():
@@ -1051,6 +1060,7 @@ def save_chunk_to_files(chunk_content, chunk_id, folder_name, base_filename, met
             embedding=embedding,
             metadata=metadata,
         )
+        refresh_search_engine(kb_dir_path.name)
         return [
             paths.get("chunk_path"),
             paths.get("metadata_path"),

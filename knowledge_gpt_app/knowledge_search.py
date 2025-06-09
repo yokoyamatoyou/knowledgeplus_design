@@ -135,6 +135,13 @@ class HybridSearchEngine:
             print(f"SentenceTransformer 読み込みエラー: {e_st}")
             self.model = None
 
+    def reindex(self) -> None:
+        """Reload all chunks and embeddings and rebuild the BM25 index."""
+        self.chunks = self._load_chunks()
+        self.embeddings = self._load_embeddings()
+        self._check_chunk_embedding_consistency()
+        self.bm25_index = self._load_or_build_bm25_index()
+
     def _load_kb_metadata(self) -> dict:
         metadata_file = self.kb_path / "kb_metadata.json"
         if metadata_file.exists():
