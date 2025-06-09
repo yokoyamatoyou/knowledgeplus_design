@@ -447,9 +447,12 @@ SUPPORTED_IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'bmp', 'tiff', 'webp']
 SUPPORTED_DOCUMENT_TYPES = ['pdf']
 SUPPORTED_CAD_TYPES = ['dxf', 'stl', 'ply', 'obj', 'step', 'stp', 'iges', 'igs', '3ds']
 
+# 共通ナレッジベースディレクトリ
+BASE_KNOWLEDGE_DIR = Path(current_dir).parent / "knowledge_base"
+BASE_KNOWLEDGE_DIR.mkdir(exist_ok=True)
+
 # データディレクトリ
-DATA_DIR = Path(current_dir) / "multimodal_data"
-DATA_DIR.mkdir(exist_ok=True)
+DATA_DIR = BASE_KNOWLEDGE_DIR
 
 # セッション状態初期化
 if 'uploaded_files' not in st.session_state:

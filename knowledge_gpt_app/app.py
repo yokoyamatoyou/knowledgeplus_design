@@ -427,10 +427,13 @@ def get_openai_client():
 GPT4_MODEL = "gpt-4.1-2025-04-14"
 GPT4_MINI_MODEL = "gpt-4.1-mini-2025-04-14"
 
-# RAGのベースディレクトリ
-RAG_BASE_DIR = Path(current_dir) / "rag_knowledge_base"
-RAG_BASE_DIR.mkdir(exist_ok=True)
-print(f"RAGナレッジベースディレクトリ: {RAG_BASE_DIR}")
+# 共通ナレッジベースディレクトリ
+BASE_KNOWLEDGE_DIR = Path(current_dir).parent / "knowledge_base"
+BASE_KNOWLEDGE_DIR.mkdir(exist_ok=True)
+print(f"Knowledge base directory: {BASE_KNOWLEDGE_DIR}")
+
+# 互換のための変数名
+RAG_BASE_DIR = BASE_KNOWLEDGE_DIR
 
 # ワークスペースディレクトリと会話ディレクトリ
 DATA_DIR = Path(current_dir) / "data"
