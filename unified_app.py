@@ -1,6 +1,8 @@
 import streamlit as st
 import uuid
 import base64
+import types
+import torch
 
 # Ensure Streamlit page configuration is applied once across modules
 if "_page_configured" not in st.session_state:
@@ -10,6 +12,10 @@ if "_page_configured" not in st.session_state:
         initial_sidebar_state="expanded",
     )
     st.session_state["_page_configured"] = True
+
+# Workaround: avoid Streamlit watcher errors with torch dynamic modules
+if hasattr(torch, "classes") and not hasattr(torch.classes, "__path__"):
+    torch.classes.__path__ = types.SimpleNamespace(_path=[])
 
 from knowledge_gpt_app.app import (
     read_file,
@@ -41,7 +47,7 @@ if st.sidebar.button("FAQ生成"):
     if not client:
         st.sidebar.error("OpenAI client unavailable")
     else:
-        with st.sidebar.spinner("Generating FAQs..."):
+        with st.spinner("Generating FAQs..."):
             count = generate_faqs_from_chunks(kb_name, max_tokens, num_pairs, client=client)
             refresh_search_engine(kb_name)
         st.sidebar.success(f"{count} FAQs created")
