@@ -515,6 +515,16 @@ def list_conversations():
     conversations.sort(key=lambda x: x.get("date"), reverse=True)
     return conversations
 
+# -------------------- Streaming Helpers --------------------
+def stream_markdown(text: str, delay: float = 0.02) -> None:
+    """Display markdown text with a simple streaming effect."""
+    placeholder = st.empty()
+    rendered = ""
+    for ch in text:
+        rendered += ch
+        placeholder.markdown(rendered)
+        time.sleep(delay)
+
 # セッション状態の初期化
 if 'app_mode' not in st.session_state:
     st.session_state['app_mode'] = "ナレッジ検索"
@@ -574,9 +584,9 @@ apply_intel_theme()
 st.title("RAGシステム統合ツール")
 
 # アプリケーションモード選択
-mode_options = ["ナレッジ検索", "chatGPT", "ナレッジベース管理"]
+mode_options = ["ナレッジ検索", "ナレッジ構築", "FAQ作成", "chatGPT"]
 app_mode_index = mode_options.index(st.session_state['app_mode']) if st.session_state['app_mode'] in mode_options else 0
-app_mode = st.sidebar.selectbox(
+app_mode = st.sidebar.radio(
     "モード選択",
     mode_options,
     index=app_mode_index
@@ -1277,7 +1287,7 @@ def semantic_chunking(text, overlap_ratio, sudachi_mode, document_type, knowledg
 # 現在のモードを表示
 st.markdown(f"""<div class="mode-header">現在のモード: {app_mode}</div>""", unsafe_allow_html=True)
 
-if app_mode == "ナレッジベース管理":
+if app_mode == "ナレッジ構築":
     st.markdown("ドキュメントをアップロードして意味ベースのチャンク分けを実行し、RAG用のナレッジベースを構築します。")
     tab1, tab2 = st.tabs(["ナレッジベース作成", "ナレッジベース管理"])
     with tab1:
@@ -1492,7 +1502,7 @@ elif app_mode == "ナレッジ検索":
         else:
             st.sidebar.caption("検索エンジンは検索実行時に自動準備されます。")
     else:
-        st.sidebar.warning("利用可能なナレッジベースがありません。「ナレッジベース管理」モードでナレッジベースを作成してください。")
+        st.sidebar.warning("利用可能なナレッジベースがありません。「ナレッジ構築」モードでナレッジベースを作成してください。")
     st.sidebar.header("検索パラメータ")
     search_threshold_val_ui = st.sidebar.slider("検索類似度閾値", 0.0, 1.0, 0.15, 0.01, help="この値以上の類似度を持つ結果を表示します。低いほど多くの結果が出ますが、関連性が低いものも混ざります。")
     top_k_val_ui = st.sidebar.slider("最大検索結果数", 1, 20, 5, help="表示する検索結果の最大数。")
@@ -1579,7 +1589,7 @@ elif app_mode == "ナレッジ検索":
                             )
                             st.markdown("---")
                             st.subheader("⟲ AIによる検索結果の要約回答")
-                            st.markdown(gpt_answer_text)
+                            stream_markdown(gpt_answer_text)
                             st.markdown("---")
                     st.subheader(f"詳細な検索結果 ({len(search_results_data)}件)")
                     for i_disp, res_detail_disp in enumerate(search_results_data):
@@ -1596,6 +1606,7 @@ elif app_mode == "ナレッジ検索":
                             st.text_area(f"チャンク内容 (結果 {i_disp+1})", res_detail_disp.get('text', ''), height=200, key=f"search_res_text_{i_disp}")
                             with st.popover("詳細メタデータを見る...", use_container_width=True):
                                 st.json(meta_info_disp, expanded=True)
+                        time.sleep(0.05)
     with st.expander("💡 ナレッジ検索の使い方とヒント"):
         st.markdown("""
         - **検索対象の選択**: サイドバーで検索したいナレッジベースを選択します。「すべて」を選ぶと横断検索が可能です。
@@ -1605,6 +1616,10 @@ elif app_mode == "ナレッジ検索":
         - **結果の確認**: 各検索結果はクリックで詳細（チャンク内容やメタデータ）を確認できます。
         - **検索エンジン**: 検索実行時に、対象KBの検索エンジンが自動的に準備・利用されます。
         """)
+
+elif app_mode == "FAQ作成":
+    st.header("FAQ作成モード")
+    st.info("このモードはフェーズ2で実装予定です。")
 
 elif app_mode == "chatGPT":
     st.header(f"⟐ chatGPT - 現在の会話: {st.session_state.get('gpt_conversation_title', '新しい会話')}")
