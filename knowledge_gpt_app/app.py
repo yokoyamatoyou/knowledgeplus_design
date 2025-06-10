@@ -560,8 +560,9 @@ if 'response_length' not in st.session_state:
     st.session_state['response_length'] = "普通"
 
 # Streamlit UIの設定
-st.set_page_config(page_title="RAGシステム統合ツール", layout="wide")
-st.session_state["_page_configured"] = True
+if "_page_configured" not in st.session_state:
+    st.set_page_config(page_title="RAGシステム統合ツール", layout="wide")
+    st.session_state["_page_configured"] = True
 
 # カスタムCSSを適用
 apply_intel_theme()
