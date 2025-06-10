@@ -357,6 +357,11 @@ current_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(current_dir)
 print(f"カレントディレクトリを設定: {current_dir}")
 
+# 親ディレクトリ(リポジトリルート)をパスに追加
+repo_root = os.path.dirname(current_dir)
+if repo_root not in sys.path:
+    sys.path.insert(0, repo_root)
+
 # 強化版NLTKリソースダウンロード関数
 def ensure_nltk_resources():
     """必要なNLTKリソースが確実にダウンロードされるようにする"""

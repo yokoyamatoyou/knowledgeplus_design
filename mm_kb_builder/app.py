@@ -438,6 +438,11 @@ except ImportError:
 current_dir = os.path.dirname(os.path.abspath(__file__))
 os.chdir(current_dir)
 
+# 親ディレクトリ(リポジトリルート)をパスに追加
+repo_root = os.path.dirname(current_dir)
+if repo_root not in sys.path:
+    sys.path.insert(0, repo_root)
+
 # ロギング設定
 logging.basicConfig(
     level=logging.INFO,
