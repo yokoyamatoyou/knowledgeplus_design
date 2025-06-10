@@ -2,6 +2,8 @@ import streamlit as st
 import uuid
 import base64
 
+st.set_page_config(page_title="Unified Knowledge Upload", layout="wide")
+
 from knowledge_gpt_app.app import (
     read_file,
     semantic_chunking,
