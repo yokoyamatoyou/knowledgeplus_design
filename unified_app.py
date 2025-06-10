@@ -4,7 +4,11 @@ import base64
 
 # Ensure Streamlit page configuration is applied once across modules
 if "_page_configured" not in st.session_state:
-    st.set_page_config(page_title="Unified Knowledge Upload", layout="wide")
+    st.set_page_config(
+        page_title="Unified Knowledge Upload",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
     st.session_state["_page_configured"] = True
 
 from knowledge_gpt_app.app import (

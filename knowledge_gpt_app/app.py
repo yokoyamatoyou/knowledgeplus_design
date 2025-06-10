@@ -561,7 +561,11 @@ if 'response_length' not in st.session_state:
 
 # Streamlit UIの設定
 if "_page_configured" not in st.session_state:
-    st.set_page_config(page_title="RAGシステム統合ツール", layout="wide")
+    st.set_page_config(
+        page_title="RAGシステム統合ツール",
+        layout="wide",
+        initial_sidebar_state="expanded",
+    )
     st.session_state["_page_configured"] = True
 
 # カスタムCSSを適用
