@@ -373,6 +373,7 @@ if not st.session_state.get("_page_configured", False):
     st.set_page_config(
         page_title="マルチモーダルナレッジ構築ツール",
         layout="wide",
+        initial_sidebar_state="expanded",
     )
     st.session_state["_page_configured"] = True
 

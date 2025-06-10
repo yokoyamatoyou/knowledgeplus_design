@@ -232,7 +232,11 @@ if 'response_length' not in st.session_state:
 
 
 # Streamlit UIの設定
-st.set_page_config(page_title="RAGシステム統合ツール", layout="wide")
+st.set_page_config(
+    page_title="RAGシステム統合ツール",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 st.title("RAGシステム統合ツール")
 
 # アプリケーションモード選択
