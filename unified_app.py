@@ -25,13 +25,15 @@ st.title("Unified Knowledge Upload")
 kb_name = st.text_input("Knowledge Base Name", "unified_kb")
 
 st.sidebar.header("Actions")
+max_tokens = st.sidebar.number_input("Max GPT tokens", 100, 4000, 1000, 100)
+num_pairs = st.sidebar.number_input("Q&A pairs", 1, 10, 3, 1)
 if st.sidebar.button("FAQ生成"):
     client = get_openai_client()
     if not client:
         st.sidebar.error("OpenAI client unavailable")
     else:
         with st.sidebar.spinner("Generating FAQs..."):
-            count = generate_faqs_from_chunks(kb_name, client=client)
+            count = generate_faqs_from_chunks(kb_name, max_tokens, num_pairs, client=client)
             refresh_search_engine(kb_name)
         st.sidebar.success(f"{count} FAQs created")
 

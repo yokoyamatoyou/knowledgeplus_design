@@ -31,4 +31,9 @@ def test_generate_faq_cli(tmp_path, monkeypatch):
 
     generate_faq.main(["kb"])
 
-    assert (kb_dir / "faqs.json").exists()
+    faq_file = kb_dir / "faqs.json"
+    assert faq_file.exists()
+    data = json.loads(faq_file.read_text(encoding="utf-8"))
+    assert isinstance(data, list) and data
+    first = data[0]
+    assert "question" in first and "answer" in first
