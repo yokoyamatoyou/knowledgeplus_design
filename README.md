@@ -81,3 +81,11 @@ python reindex_kb.py <kb_name>
 ```
 
 This reloads all chunks from disk and regenerates the BM25 index.
+
+To automatically create FAQs from existing chunks run:
+
+```bash
+python generate_faq.py <kb_name>
+```
+
+Generated files are placed under `knowledge_base/<kb_name>/faq/` and can be viewed from the chat sidebar.
