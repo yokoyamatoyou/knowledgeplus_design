@@ -30,6 +30,14 @@ returns their paths. These paths are stored inside each chunk's metadata JSON so
 that the chatbot can provide download links. When a chunk or image is saved the
 corresponding search index is refreshed via `refresh_search_engine()`.
 
+If a file with the same name already exists, the new one will be saved with a
+version suffix so older uploads remain intact. A standalone `reindex_kb.py`
+script is provided to rebuild indexes from disk:
+
+```bash
+python reindex_kb.py <kb_name>
+```
+
 ## FAQ Generation
 - **Objective:** Automatically create frequently asked questions from the knowledge base.
 - **Key tasks:**
