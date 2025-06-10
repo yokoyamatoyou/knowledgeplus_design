@@ -6,6 +6,7 @@ from knowledge_gpt_app.app import (
     read_file,
     semantic_chunking,
     get_openai_client,
+    refresh_search_engine,
 )
 from mm_kb_builder.app import (
     process_cad_file,
@@ -17,10 +18,22 @@ from mm_kb_builder.app import (
     SUPPORTED_IMAGE_TYPES,
     SUPPORTED_CAD_TYPES,
 )
+from generate_faq import generate_faqs_from_chunks
 
 st.title("Unified Knowledge Upload")
 
 kb_name = st.text_input("Knowledge Base Name", "unified_kb")
+
+st.sidebar.header("Actions")
+if st.sidebar.button("FAQ生成"):
+    client = get_openai_client()
+    if not client:
+        st.sidebar.error("OpenAI client unavailable")
+    else:
+        with st.sidebar.spinner("Generating FAQs..."):
+            count = generate_faqs_from_chunks(kb_name, client=client)
+            refresh_search_engine(kb_name)
+        st.sidebar.success(f"{count} FAQs created")
 
 all_types = [
     'pdf', 'docx', 'xlsx', 'xls', 'txt'
