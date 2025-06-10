@@ -116,9 +116,11 @@ class HybridSearchEngine:
         
         self.chunks = self._load_chunks()
         print(f"初期チャンク読み込み完了: {len(self.chunks)}件")
-        
+
         self.embeddings = self._load_embeddings()
         print(f"埋め込みベクトル読み込み完了: {len(self.embeddings)}件")
+
+        self._integrate_faq_chunks()
         
         self._check_chunk_embedding_consistency()
         
@@ -139,6 +141,7 @@ class HybridSearchEngine:
         """Reload all chunks and embeddings and rebuild the BM25 index."""
         self.chunks = self._load_chunks()
         self.embeddings = self._load_embeddings()
+        self._integrate_faq_chunks()
         self._check_chunk_embedding_consistency()
         self.bm25_index = self._load_or_build_bm25_index()
 
@@ -216,6 +219,28 @@ class HybridSearchEngine:
             print(f"  警告: 次の埋め込みIDには対応するチャンクがありません (上位5件): {list(missing_chunks_for_embeddings)[:5]}")
         common_ids_count = len(chunk_ids.intersection(embedding_ids))
         print(f"  チャンクと埋め込みで共通のID数: {common_ids_count}")
+
+    def _integrate_faq_chunks(self) -> None:
+        """Load FAQ entries and append them to self.chunks."""
+        faq_file = self.kb_path / "faqs.json"
+        if not faq_file.exists():
+            return
+        try:
+            with open(faq_file, "r", encoding="utf-8") as f:
+                faqs = json.load(f)
+        except Exception as e:
+            print(f"FAQ読み込みエラー: {e}")
+            return
+        for faq in faqs:
+            fid = faq.get("id")
+            if not fid:
+                continue
+            text = f"Q: {faq.get('question', '')}\nA: {faq.get('answer', '')}"
+            self.chunks.append({
+                'id': fid,
+                'text': text,
+                'metadata': {'faq': True, 'question': faq.get('question'), 'answer': faq.get('answer')}
+            })
 
     def _create_tokenized_corpus_and_filter_chunks(self) -> tuple[list[list[str]], list[dict]]:
         print("BM25用コーパスのトークン化とチャンクフィルタリングを開始...")
