@@ -64,3 +64,15 @@ python reindex_kb.py <kb_name>
   - Run end-to-end tests for the full upload-to-chat workflow.
   - Collect feedback and fix any issues.
 
+### Phase 4 Implementation
+
+Phase 4 introduces FAQ generation and search integration features. A new script
+`generate_faq.py` creates question–answer pairs from existing chunks and saves
+them in `faqs.json`. The `HybridSearchEngine` loads these entries so FAQs can be
+searched alongside regular chunks. The unified Streamlit app exposes an “FAQ生成”
+button in the sidebar to trigger generation and refresh the search index.
+
+Future improvements should allow users to customise the number of Q&A pairs and
+token limits, and provide a dedicated search view or results blending for FAQ
+content.
+
