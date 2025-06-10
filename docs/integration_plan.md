@@ -48,10 +48,11 @@ python reindex_kb.py <kb_name>
 ### Phase 4 Implementation
 
 FAQ entries are generated from existing chunks using `generate_faq.py` or via the
-sidebar button in `unified_app.py`. The script writes a `faqs.json` file under
-`knowledge_base/<kb_name>` and stores embeddings so the search engine can index
-them. In the UI a progress spinner is shown and the search index is refreshed
-after generation.
+Streamlit interface. A dedicated **FAQ作成** mode has been added to
+`knowledge_gpt_app` where you can select a knowledge base and generate FAQs.
+The script writes a `faqs.json` file under `knowledge_base/<kb_name>` and stores
+embeddings so the search engine can index them. In the UI a progress spinner is
+shown and the search index is refreshed after generation.
 
 Example CLI usage:
 

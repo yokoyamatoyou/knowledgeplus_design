@@ -31,6 +31,7 @@ from shared.upload_utils import (
     BASE_KNOWLEDGE_DIR as SHARED_KB_DIR,
     ensure_openai_key,
 )
+from generate_faq import generate_faqs_from_chunks
 
 # カスタムCSS - Intel風デザイン
 def apply_intel_theme():
@@ -1619,7 +1620,45 @@ elif app_mode == "ナレッジ検索":
 
 elif app_mode == "FAQ作成":
     st.header("FAQ作成モード")
-    st.info("このモードはフェーズ2で実装予定です。")
+
+    kb_list_for_faq = list_knowledge_bases()
+    kb_names_for_faq = [kb["name"] for kb in kb_list_for_faq]
+    if not kb_names_for_faq:
+        st.info("利用可能なナレッジベースがありません。まず『ナレッジ構築』モードで作成してください。")
+    else:
+        current_faq_kb = st.session_state.get("faq_kb_name", kb_names_for_faq[0])
+        if current_faq_kb not in kb_names_for_faq:
+            current_faq_kb = kb_names_for_faq[0]
+        selected_kb = st.selectbox("対象ナレッジベース", kb_names_for_faq, index=kb_names_for_faq.index(current_faq_kb))
+        st.session_state["faq_kb_name"] = selected_kb
+
+        st.sidebar.header("FAQ生成設定")
+        max_tokens = st.sidebar.number_input(
+            "最大トークン数",
+            min_value=100,
+            max_value=4000,
+            value=int(st.session_state.get("faq_max_tokens", 1000)),
+            step=100,
+        )
+        st.session_state["faq_max_tokens"] = int(max_tokens)
+        num_pairs = st.sidebar.number_input(
+            "Q&A数",
+            min_value=1,
+            max_value=10,
+            value=int(st.session_state.get("faq_num_pairs", 3)),
+            step=1,
+        )
+        st.session_state["faq_num_pairs"] = int(num_pairs)
+
+        if st.button("◎ FAQを生成", key="generate_faqs_btn", type="primary"):
+            client = get_openai_client()
+            if not client:
+                st.error("OpenAIクライアントの取得に失敗しました。")
+            else:
+                with st.spinner("FAQを生成中..."):
+                    count = generate_faqs_from_chunks(selected_kb, int(max_tokens), int(num_pairs), client=client)
+                    refresh_search_engine(selected_kb)
+                st.success(f"{count}件のFAQを生成しました。")
 
 elif app_mode == "chatGPT":
     st.header(f"⟐ chatGPT - 現在の会話: {st.session_state.get('gpt_conversation_title', '新しい会話')}")
