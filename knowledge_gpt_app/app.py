@@ -1479,6 +1479,18 @@ elif app_mode == "ナレッジ検索":
             st.sidebar.caption(f"準備済エンジン: {', '.join(loaded_engine_names)}")
         else:
             st.sidebar.caption("検索エンジンは検索実行時に自動準備されます。")
+
+        if selected_kb_display_option_ui != all_kb_option_display_ui:
+            from shared.faq_utils import load_faqs
+            faqs_for_sidebar = load_faqs(selected_kb_display_option_ui)
+            if faqs_for_sidebar:
+                with st.sidebar.expander("FAQ一覧", expanded=False):
+                    query = st.text_input("FAQ検索", key="faq_search")
+                    for faq_item in faqs_for_sidebar:
+                        if not query or query in faq_item.get("question", ""):
+                            st.markdown(f"**Q:** {faq_item.get('question','')}\n\n{faq_item.get('answer','')}")
+            else:
+                st.sidebar.caption("FAQがありません。")
     else:
         st.sidebar.warning("利用可能なナレッジベースがありません。「ナレッジベース管理」モードでナレッジベースを作成してください。")
     st.sidebar.header("検索パラメータ")

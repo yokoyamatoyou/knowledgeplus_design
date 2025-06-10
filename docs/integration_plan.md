@@ -45,6 +45,10 @@ python reindex_kb.py <kb_name>
   - Generate question and answer pairs with GPT.
   - Store generated FAQs for reference within the app.
 
+### Phase 4 Implementation
+
+The `generate_faq.py` script reads all chunk text under `knowledge_base/<kb_name>/chunks` and uses GPT to create a single Q&A pair for each chunk. The results are saved as individual JSON files under `knowledge_base/<kb_name>/faq/` with metadata describing the source chunk and generation time. The chatbot UI loads these files so users can browse or search FAQs from the sidebar.
+
 ## Local Storage
 - **Objective:** Keep all data on disk so that the app can run offline.
 - **Key tasks:**
