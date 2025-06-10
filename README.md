@@ -71,3 +71,13 @@ Processed chunks, embeddings and metadata are now stored under
 `knowledge_base/<kb_name>` using `save_processed_data()`. The metadata JSON
 includes these paths so that other components can access the original files.
 Whenever a chunk is stored the chatbot search index is refreshed automatically.
+
+If you upload a file with the same name but different content, a version
+number is appended so the existing file is preserved. To rebuild the search
+index for an existing knowledge base you can run:
+
+```bash
+python reindex_kb.py <kb_name>
+```
+
+This reloads all chunks from disk and regenerates the BM25 index.
