@@ -368,10 +368,12 @@ def apply_intel_theme():
 # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
 # ページ設定
 # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
-st.set_page_config(
-    page_title="マルチモーダルナレッジ構築ツール",
-    layout="wide"
-)
+if not st.session_state.get("_page_configured", False):
+    st.set_page_config(
+        page_title="マルチモーダルナレッジ構築ツール",
+        layout="wide",
+    )
+    st.session_state["_page_configured"] = True
 
 # インテル風テーマ適用
 apply_intel_theme()
