@@ -3,6 +3,8 @@ import uuid
 import base64
 import types
 import torch
+import json
+from pathlib import Path
 
 # Ensure Streamlit page configuration is applied once across modules
 if "_page_configured" not in st.session_state:
@@ -35,6 +37,78 @@ from mm_kb_builder.app import (
     SUPPORTED_CAD_TYPES,
 )
 from generate_faq import generate_faqs_from_chunks
+from shared.upload_utils import BASE_KNOWLEDGE_DIR
+
+
+def extract_mid_text(text: str, length: int = 12) -> str:
+    """Return a short snippet from the middle of the text."""
+    text = text.strip().replace("\n", " ")
+    if len(text) <= length:
+        return text
+    mid = len(text) // 2
+    start = max(0, mid - length // 2)
+    return text[start : start + length]
+
+
+def add_thumbnail(item_id: str, item_type: str, content: str) -> None:
+    """Store thumbnail info in session state."""
+    data = {"id": item_id, "type": item_type, "content": content}
+    st.session_state.setdefault("thumbnails", []).append(data)
+
+
+def display_thumbnails(kb_name: str) -> None:
+    """Render thumbnails in a 3x3 grid with simple paging."""
+    thumbs = st.session_state.get("thumbnails", [])
+    if not thumbs:
+        return
+
+    page = st.session_state.get("thumb_page", 0)
+    start = page * 9
+    end = start + 9
+    page_items = thumbs[start:end]
+
+    for row in range(3):
+        cols = st.columns(3)
+        for col in range(3):
+            idx = row * 3 + col
+            if idx >= len(page_items):
+                break
+            item = page_items[idx]
+            if item["type"] == "image":
+                img_bytes = base64.b64decode(item["content"])
+                cols[col].image(img_bytes, use_column_width=True)
+            else:
+                cols[col].markdown(
+                    f"<div style='font-size:10pt'>{item['content']}</div>",
+                    unsafe_allow_html=True,
+                )
+            if cols[col].button("メタ情報入力", key=f"meta_btn_{item['id']}"):
+                st.session_state["edit_target"] = item
+
+    nav_cols = st.columns(2)
+    if page > 0:
+        if nav_cols[0].button("前へ", key="prev_page"):
+            st.session_state["thumb_page"] = page - 1
+    if end < len(thumbs):
+        if nav_cols[1].button("次へ", key="next_page"):
+            st.session_state["thumb_page"] = page + 1
+
+    if "edit_target" in st.session_state:
+        item = st.session_state["edit_target"]
+        st.subheader("メタ情報編集")
+        title = st.text_input("タイトル", key=f"title_{item['id']}")
+        tags = st.text_input("タグ (カンマ区切り)", key=f"tags_{item['id']}")
+        if st.button("保存", key=f"save_meta_{item['id']}"):
+            meta = {
+                "title": title,
+                "tags": [t.strip() for t in tags.split(",") if t.strip()],
+            }
+            meta_dir = BASE_KNOWLEDGE_DIR / kb_name / "metadata"
+            meta_dir.mkdir(parents=True, exist_ok=True)
+            path = meta_dir / f"{item['id']}_user.json"
+            path.write_text(json.dumps(meta, ensure_ascii=False, indent=2), encoding="utf-8")
+            st.success("メタ情報を保存しました")
+            del st.session_state["edit_target"]
 
 # Apply common theme styling
 apply_intel_theme()
@@ -88,6 +162,7 @@ if uploaded_files and st.button("Process Files"):
                             original_filename=file.name,
                             original_bytes=bytes_data,
                         )
+                        add_thumbnail(str(uuid.uuid4()), "text", extract_mid_text(text))
                         st.success(f"Processed text file {file.name}")
                     else:
                         st.error(f"Failed to read {file.name}")
@@ -109,8 +184,9 @@ if uploaded_files and st.button("Process Files"):
                     if embedding is None:
                         st.error(f"Embedding failed for {file.name}")
                         continue
+                    item_id = str(uuid.uuid4())
                     success, _ = save_unified_knowledge_item(
-                        str(uuid.uuid4()),
+                        item_id,
                         analysis,
                         {},
                         embedding,
@@ -119,8 +195,13 @@ if uploaded_files and st.button("Process Files"):
                         original_bytes=bytes_data,
                     )
                     if success:
+                        add_thumbnail(item_id, "image", img_b64)
                         st.success(f"Processed image/CAD file {file.name}")
                     else:
                         st.error(f"Saving failed for {file.name}")
                 else:
                     st.warning(f"Unsupported file type: {file.name}")
+
+
+
+display_thumbnails(kb_name)

@@ -148,3 +148,36 @@ without altering existing data or indexes.
   - No code will be changed during this phase. Results will be used as a basis
     for later implementation steps.
 
+### Phase 4 Thumbnail & Metadata UI
+
+- **Objective:**
+  - Show uploaded items as thumbnails and enable per-item metadata entry.
+- **Thumbnail spec:**
+  - Items are arranged in a 3x3 grid (max 9 per page).
+  - Document thumbnails use 10pt text with 12 characters taken from the middle
+    of a chunk.
+  - If more than 9 items exist, navigation buttons allow page changes.
+- **Metadata flow:**
+  - Clicking a thumbnail reveals fields for `title` and `tags`.
+  - Saving writes a JSON file to `knowledge_base/<kb_name>/metadata/<id>_user.json`.
+  - The `id` corresponds to the internal UUID assigned at upload time.
+- **UI mock:**
+
+  ```
+  [prev] Page 1/2 [next]
+  ┌───┬───┬───┐
+  │ 1 │ 2 │ 3 │
+  ├───┼───┼───┤
+  │ 4 │ 5 │ 6 │
+  ├───┼───┼───┤
+  │ 7 │ 8 │ 9 │
+  └───┴───┴───┘
+  ```
+  Selecting a cell opens a small form below the grid:
+
+  ```
+  Title: [__________]
+  Tags : [__________]
+  [ Save ]
+  ```
+
