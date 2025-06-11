@@ -93,3 +93,20 @@ Minor UI fixes were made in the unified app. A common Intel-themed style is now
 applied on startup and file processing is wrapped in `st.spinner` so progress is
 clear. A small `torch.classes` workaround remains in place to avoid Streamlit
 reload errors.
+
+The upload screen offers **個別処理** or **まとめて処理**. When batch mode is
+selected, the search index is refreshed only once after all files finish. Index
+updates can also be set to **手動** so that `refresh_search_engine()` is called
+only when triggered by the user.
+
+In manual mode, click **検索インデックス更新** in the interface to rebuild
+the search engine when needed.
+
+`save_processed_data()` returns paths for the stored chunk, embedding, metadata,
+image and original file. These are placed under
+`knowledge_base/<kb_name>/{chunks|embeddings|metadata|images|files}`. If an
+uploaded file already exists with different contents, a version suffix such as
+`_v1` or `_v2` is appended automatically.
+
+Optionally, FAQs can be generated immediately after processing using
+`generate_faq.py`.

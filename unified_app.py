@@ -139,11 +139,29 @@ uploaded_files = st.file_uploader(
     accept_multiple_files=True,
 )
 
+process_mode = st.radio(
+    "処理モード",
+    ["個別処理", "まとめて処理"],
+    horizontal=True,
+)
+index_mode = st.radio(
+    "インデックス更新",
+    ["自動(処理後)", "手動"],
+    horizontal=True,
+)
+if index_mode == "手動":
+    if st.button("検索インデックス更新"):
+        refresh_search_engine(kb_name)
+        st.success("検索インデックスを更新しました")
+auto_faq = st.checkbox("処理後にFAQも生成する")
+
 if uploaded_files and st.button("Process Files"):
     client = get_openai_client()
     if not client:
         st.error("OpenAI client unavailable")
     else:
+        auto_update = index_mode == "自動(処理後)"
+        batch = process_mode == "まとめて処理"
         for file in uploaded_files:
             with st.spinner(f"Processing {file.name}..."):
                 ext = file.name.split('.')[-1].lower()
@@ -161,6 +179,7 @@ if uploaded_files and st.button("Process Files"):
                             client,
                             original_filename=file.name,
                             original_bytes=bytes_data,
+                            refresh=auto_update and not batch,
                         )
                         add_thumbnail(str(uuid.uuid4()), "text", extract_mid_text(text))
                         st.success(f"Processed text file {file.name}")
@@ -193,6 +212,7 @@ if uploaded_files and st.button("Process Files"):
                         file.name,
                         img_b64,
                         original_bytes=bytes_data,
+                        refresh=auto_update and not batch,
                     )
                     if success:
                         add_thumbnail(item_id, "image", img_b64)
@@ -202,6 +222,15 @@ if uploaded_files and st.button("Process Files"):
                 else:
                     st.warning(f"Unsupported file type: {file.name}")
 
-
+        if batch and auto_update:
+            refresh_search_engine(kb_name)
+        if auto_faq:
+            with st.spinner("Generating FAQs..."):
+                count = generate_faqs_from_chunks(kb_name, max_tokens, num_pairs, client=client)
+                if auto_update:
+                    refresh_search_engine(kb_name)
+            st.success(f"{count} FAQs created")
+        if not auto_update:
+            st.info("処理後は『検索インデックス更新』ボタンを押してください")
 
 display_thumbnails(kb_name)
