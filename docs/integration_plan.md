@@ -122,3 +122,12 @@ without altering existing data or indexes.
   - No code will be changed during this phase. Results will be used as a basis
     for later implementation steps.
 
+### Phase 2 Search Integration
+
+- **Objective:** consolidate the multiple search implementations and design a unified search interface.
+- **Search comparison:** `knowledge_gpt_app/knowledge_search.py` contains a `HybridSearchEngine` that combines vector and BM25 retrieval. `vector_store.py` offers a basic cosine search. After reviewing both we will keep `HybridSearchEngine` as the primary engine and refactor other modules to delegate to it.
+- **Search modes:** users can choose vector search, BM25 or a weighted hybrid from one form. The input fields include the query text, number of results, similarity threshold and optional weights.
+- **UI design:** selecting **Search** in the sidebar displays the search form and a results list while the sidebar remains visible so other modes (Upload, Chat, FAQ) are always accessible.
+- **Extensibility:** new search algorithms can be added by extending `HybridSearchEngine` and exposing additional options in the form. Configuration will live in a dedicated `search` module so future modes can be plugged in without restructuring the app.
+- **Input parameters:** the form accepts a query string, result count (`top_k`), similarity `threshold` and optional weights for vector and BM25 scoring.
+- **Display:** results show chunk id, snippet and the computed similarity value.
