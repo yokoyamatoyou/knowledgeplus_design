@@ -1,5 +1,6 @@
 import os
 import json
+from config import EMBEDDING_MODEL, EMBEDDING_DIMENSIONS
 import numpy as np
 # from sklearn.feature_extraction.text import TfidfVectorizer # BM25には不要
 from sklearn.metrics.pairwise import cosine_similarity
@@ -111,7 +112,7 @@ class HybridSearchEngine:
         print(f"パス確認: chunks={self.chunks_path.exists()}, metadata={self.metadata_path.exists()}, embeddings={self.embeddings_path.exists()}")
         
         self.kb_metadata = self._load_kb_metadata()
-        self.embedding_model = self.kb_metadata.get('embedding_model', 'text-embedding-3-small')
+        self.embedding_model = self.kb_metadata.get('embedding_model', EMBEDDING_MODEL)
         print(f"使用する埋め込みモデル: {self.embedding_model}")
         
         self.chunks = self._load_chunks()
@@ -373,7 +374,11 @@ class HybridSearchEngine:
             print(f"  警告 (get_embedding): 埋め込み対象のテキストが空または不正。")
             return None
         try:
-            response = client.embeddings.create(model=model_name, input=text) # type: ignore
+            response = client.embeddings.create(
+                model=model_name,
+                input=text,
+                dimensions=EMBEDDING_DIMENSIONS
+            )  # type: ignore
             embedding = response.data[0].embedding
             return embedding
         except Exception as e_openai_emb:

@@ -456,8 +456,8 @@ logger = logging.getLogger('multimodal_kb_builder')
 
 # 定数
 GPT4O_MODEL = "gpt-4.1"
-EMBEDDING_MODEL = "text-embedding-3-large"
-EMBEDDING_DIMENSIONS = 1536  # コスト効率化（デフォルト3072→1536）
+from config import EMBEDDING_MODEL, EMBEDDING_DIMENSIONS
+
 SUPPORTED_IMAGE_TYPES = ['jpg', 'jpeg', 'png', 'bmp', 'tiff', 'webp']
 SUPPORTED_DOCUMENT_TYPES = ['pdf']
 SUPPORTED_CAD_TYPES = ['dxf', 'stl', 'ply', 'obj', 'step', 'stp', 'iges', 'igs', '3ds']
@@ -1012,7 +1012,7 @@ show_debug = st.sidebar.checkbox("デバッグ情報を表示", value=False)
 embedding_dims = st.sidebar.selectbox(
     "埋め込み次元数",
     [1536, 3072],
-    index=0,
+    index=1 if EMBEDDING_DIMENSIONS == 3072 else 0,
     help="1536: コスト効率重視、3072: 精度重視"
 )
 
