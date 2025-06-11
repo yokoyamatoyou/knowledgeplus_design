@@ -961,7 +961,16 @@ def create_structured_metadata(analysis_result, user_additions, filename):
         "cad_metadata": analysis_result.get('cad_metadata', {})
     }
 
-def save_unified_knowledge_item(image_id, analysis_result, user_additions, embedding, filename, image_base64=None, original_bytes=None):
+def save_unified_knowledge_item(
+    image_id,
+    analysis_result,
+    user_additions,
+    embedding,
+    filename,
+    image_base64=None,
+    original_bytes=None,
+    refresh: bool = True,
+):
     """★ 統一ナレッジアイテムとして保存（RAGシステム互換構造）"""
     try:
         search_chunk = create_comprehensive_search_chunk(analysis_result, user_additions)
@@ -989,7 +998,8 @@ def save_unified_knowledge_item(image_id, analysis_result, user_additions, embed
             original_bytes=original_bytes,
             image_bytes=image_bytes,
         )
-        _refresh_search_engine(kb_name)
+        if refresh:
+            _refresh_search_engine(kb_name)
         file_link = paths.get("original_file_path", "")
 
         return True, {

@@ -96,6 +96,15 @@ The unified app now applies a shared Intel-inspired theme and displays a
 reload issues during development. These adjustments polish the user interface
 without altering existing data or indexes.
 
+#### Extended Options for Processing
+
+- ユーザーは **個別処理** と **まとめて処理** を切り替えられる。まとめて処理を選ぶと全ファイルを保存した後に一度だけ検索インデックスを更新する。
+- インデックス更新は **自動(処理後)** か **手動** を選択でき、手動の場合は `refresh_search_engine()` ボタンで明示的に実行する。
+- 手動モードでは画面の **検索インデックス更新** ボタンを押すことでいつでも再構築できる。
+- `save_processed_data()` の返り値には `chunk_path`, `embedding_path`, `metadata_path`, `image_path`, `original_file_path` が含まれ、`knowledge_base/<kb_name>` 配下の対応サブフォルダに保存される。
+- 既存ファイルと内容が異なる場合は `_v1`, `_v2` ... のようにファイル名にバージョンが自動付与される。
+- 処理完了後にFAQを自動生成するオプションを用意し、必要に応じて `generate_faq.py` と連携する。
+
 ## Local Storage
 - **Objective:** Keep all data on disk so that the app can run offline.
 - **Key tasks:**

@@ -1149,7 +1149,16 @@ def create_overlapping_chunks(segments, overlap_ratio_percent=15, max_chunk_toke
         chunks_text.append(current_chunk_text.strip())
     return [c for c in chunks_text if c.strip() and estimate_tokens(c) > 5]
 
-def save_chunk_to_files(chunk_content, chunk_id, folder_name, base_filename, metadata, embedding, kb_dir_path: Path):
+def save_chunk_to_files(
+    chunk_content,
+    chunk_id,
+    folder_name,
+    base_filename,
+    metadata,
+    embedding,
+    kb_dir_path: Path,
+    refresh: bool = True,
+):
     try:
         paths = save_processed_data(
             kb_dir_path.name,
@@ -1158,7 +1167,8 @@ def save_chunk_to_files(chunk_content, chunk_id, folder_name, base_filename, met
             embedding=embedding,
             metadata=metadata,
         )
-        refresh_search_engine(kb_dir_path.name)
+        if refresh:
+            refresh_search_engine(kb_dir_path.name)
         return [
             paths.get("chunk_path"),
             paths.get("metadata_path"),
@@ -1273,7 +1283,17 @@ def search_multiple_knowledge_bases(query, kb_names, top_k=5, threshold=0.15, cl
     final_results = all_results[:top_k] 
     return final_results, len(final_results) == 0
 
-def semantic_chunking(text, overlap_ratio, sudachi_mode, document_type, knowledge_base_name, client=None, original_filename=None, original_bytes=None):
+def semantic_chunking(
+    text,
+    overlap_ratio,
+    sudachi_mode,
+    document_type,
+    knowledge_base_name,
+    client=None,
+    original_filename=None,
+    original_bytes=None,
+    refresh: bool = True,
+):
     if client is None:
         client = get_openai_client()
         if client is None:
@@ -1337,11 +1357,21 @@ def semantic_chunking(text, overlap_ratio, sudachi_mode, document_type, knowledg
                     st.warning(f"チャンク {chunk_id_str} の埋め込みベクトル生成に失敗しました。このチャンクのベクトル情報はスキップされます。")
                 st.write(f"ファイル保存中 (チャンク {chunk_id_str})...")
                 saved_files = save_chunk_to_files(
-                    chunk_content, chunk_id_str, folder_name, base_filename,
-                    {"id": chunk_id_str, "filename": f"{base_filename}_{chunk_id_str}", 
-                     "token_count": estimate_tokens(chunk_content), "char_count": len(chunk_content),
-                     "meta_info": metadata, "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S")},
-                    embedding, kb_dir_path
+                    chunk_content,
+                    chunk_id_str,
+                    folder_name,
+                    base_filename,
+                    {
+                        "id": chunk_id_str,
+                        "filename": f"{base_filename}_{chunk_id_str}",
+                        "token_count": estimate_tokens(chunk_content),
+                        "char_count": len(chunk_content),
+                        "meta_info": metadata,
+                        "created_at": datetime.now().strftime("%Y-%m-%d %H:%M:%S"),
+                    },
+                    embedding,
+                    kb_dir_path,
+                    refresh=False,
                 )
                 processed_chunks_info.append({
                     "id": chunk_id_str, "content": chunk_content, "meta_info": metadata,
@@ -1350,7 +1380,14 @@ def semantic_chunking(text, overlap_ratio, sudachi_mode, document_type, knowledg
                 status_item.update(label=f"チャンク {chunk_id_str}/{total_chunks} 処理完了", state="complete")
             progress_bar.progress((i + 1) / total_chunks, text=f"チャンク {i+1}/{total_chunks} 処理完了")
         progress_bar.empty()
-        update_kb_metadata(kb_dir_path, document_type, len(processed_chunks_info), embedding_model_for_kb)
+        update_kb_metadata(
+            kb_dir_path,
+            document_type,
+            len(processed_chunks_info),
+            embedding_model_for_kb,
+        )
+        if refresh:
+            refresh_search_engine(kb_dir_path.name)
         return processed_chunks_info
     except Exception as e:
         logger.error(f"意味ベースチャンク分けエラー: {e}", exc_info=True)
