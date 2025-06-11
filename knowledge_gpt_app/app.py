@@ -23,6 +23,24 @@ import traceback
 import nltk
 from nltk.tokenize import word_tokenize
 from nltk.corpus import stopwords
+
+# Optional libraries for PDF/Docx OCR handling
+try:
+    from pdf2image import convert_from_bytes
+    PDF_SUPPORT = True
+except Exception:
+    PDF_SUPPORT = False
+
+try:
+    import pytesseract
+    OCR_SUPPORT = True
+except Exception:
+    OCR_SUPPORT = False
+
+try:
+    from PIL import Image
+except Exception:
+    Image = None
 import time
 from sentence_transformers import SentenceTransformer
 from rank_bm25 import BM25Okapi
@@ -602,15 +620,22 @@ def read_file(file):
     file_type = file.name.split('.')[-1].lower()
     try:
         if file_type == 'pdf':
-            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
-                shutil.copyfileobj(file, temp_file)
-                temp_path = temp_file.name
+            data = file.read()
             file.seek(0)
-            with open(temp_path, 'rb') as f:
-                pdf_reader = PyPDF2.PdfReader(f)
-                for page in pdf_reader.pages:
-                    page_text = page.extract_text()
-                    if page_text: content += page_text + "\n"
+            with tempfile.NamedTemporaryFile(delete=False, suffix='.pdf') as temp_file:
+                temp_file.write(data)
+                temp_path = temp_file.name
+            pdf_reader = PyPDF2.PdfReader(BytesIO(data))
+            for idx, page in enumerate(pdf_reader.pages):
+                page_text = page.extract_text()
+                if page_text:
+                    content += page_text + "\n"
+                elif PDF_SUPPORT and OCR_SUPPORT:
+                    images = convert_from_bytes(data, first_page=idx + 1, last_page=idx + 1)
+                    if images:
+                        ocr_text = pytesseract.image_to_string(images[0], lang='jpn+eng')
+                        if ocr_text.strip():
+                            content += ocr_text + "\n"
             os.unlink(temp_path)
         elif file_type == 'docx':
             with tempfile.NamedTemporaryFile(delete=False, suffix='.docx') as temp_file:
@@ -620,6 +645,13 @@ def read_file(file):
             doc = docx.Document(temp_path)
             for para in doc.paragraphs:
                 content += para.text + "\n"
+            if OCR_SUPPORT and Image:
+                for rel in doc.part.related_parts.values():
+                    if "image" in rel.content_type:
+                        img = Image.open(BytesIO(rel.blob))
+                        ocr_text = pytesseract.image_to_string(img, lang='jpn+eng')
+                        if ocr_text.strip():
+                            content += ocr_text + "\n"
             os.unlink(temp_path)
         elif file_type in ['xlsx', 'xls']:
             file_bytes = BytesIO(file.read())
