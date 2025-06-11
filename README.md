@@ -60,6 +60,11 @@ run_app.bat
 ./run_app.sh
 ```
 
+For backwards compatibility a small wrapper script is also provided at
+`knowledge_gpt_app/unified_app.py`. Running `streamlit run
+knowledge_gpt_app/unified_app.py` will simply delegate to the root
+`unified_app.py` so existing workflows continue to work.
+
 
 ## Integration Plan
 
