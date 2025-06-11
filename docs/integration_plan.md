@@ -38,6 +38,32 @@ script is provided to rebuild indexes from disk:
 python reindex_kb.py <kb_name>
 ```
 
+### Phase 3 Upload Consolidation
+
+The upload interface is unified with a single **Upload** button that accepts
+multiple files at once. File types are detected by extension and processed
+automatically:
+
+- **PDF** – extract text with PyPDF2. If a page has no text, convert it to an
+  image and run OCR so scanned PDFs are also handled.
+- **DOCX** – read all paragraphs and run OCR on any embedded images so nothing
+  is missed.
+- **Excel** – iterate through every sheet. Append all cell text (formulas are
+  replaced by their computed values) to the text representation before
+  chunking. Images inside a sheet are extracted and processed with OCR so table
+  screenshots are not lost.
+- **Text with images** – when a document format mixes text and pictures (for
+  example a Markdown file with screenshots) the text portion is extracted
+  normally and each image is run through OCR. The results are appended to the
+  same chunk sequence so searches cover both sources.
+
+Images and CAD files retain the existing flow where optional metadata can be
+entered manually after upload.
+
+During a single upload session each file is processed sequentially under
+`st.spinner` so progress is visible. Thumbnails will later be displayed for all
+files so the user can review them before continuing.
+
 ## FAQ Generation
 - **Objective:** Automatically create frequently asked questions from the knowledge base.
 - **Key tasks:**
