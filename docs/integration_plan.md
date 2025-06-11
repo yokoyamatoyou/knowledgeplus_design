@@ -89,3 +89,36 @@ without altering existing data or indexes.
   - Run end-to-end tests for the full upload-to-chat workflow.
   - Collect feedback and fix any issues.
 
+### Phase 1 Design Review
+
+- **Objective:**
+  - Map the current features of `unified_app.py` and `knowledge_gpt_app/app.py` to
+    decide how they should be merged.
+  - Define a unified layout where the sidebar is always visible.
+
+- **Tasks:**
+  - **Code investigation**
+    - `unified_app.py` handles uploads by calling helpers such as
+      `read_file`, `semantic_chunking`, `process_cad_file` and
+      `save_unified_knowledge_item`.
+      It does not yet include a search screen.
+    - In `knowledge_gpt_app` the modules `knowledge_search.py` and `conversation.py`
+      implement search and chat. These overlap with the upload script and need to
+      be unified.
+  - **UI policy**
+    - Keep a left sidebar visible in every mode including the upload screen.
+    - Provide menu items: **Upload**, **Search**, **Chat**, **FAQ** so users can
+      jump between modes.
+  - **Navigation sketch**
+
+    ```
+    [Sidebar]
+      ├─ Upload -> File upload
+      ├─ Search -> Knowledge search
+      ├─ Chat   -> Conversation interface
+      └─ FAQ    -> FAQ generation
+    ```
+
+  - No code will be changed during this phase. Results will be used as a basis
+    for later implementation steps.
+
