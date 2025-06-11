@@ -1,6 +1,7 @@
 import os
 import streamlit as st
 from openai import OpenAI
+from config import EMBEDDING_MODEL, EMBEDDING_DIMENSIONS
 import PyPDF2
 import docx
 import pandas as pd
@@ -206,7 +207,7 @@ if 'max_chunk_size' not in st.session_state:
 if 'forced_overlap_ratio' not in st.session_state:
     st.session_state['forced_overlap_ratio'] = 25
 if 'embedding_model' not in st.session_state:
-    st.session_state['embedding_model'] = "text-embedding-3-large"
+    st.session_state['embedding_model'] = EMBEDDING_MODEL
 if 'selected_kb_option' not in st.session_state:
     st.session_state['selected_kb_option'] = None
 if 'selected_kbs' not in st.session_state:
@@ -359,7 +360,7 @@ def get_embedding(text, model=None, client=None):
             logger.error("OpenAIクライアントが利用できません (get_embedding)")
             st.error("OpenAI APIに接続できません (get_embedding)。APIキーを確認してください。")
             return None
-    effective_model = model if model else st.session_state.get('embedding_model', "text-embedding-3-large")
+    effective_model = model if model else st.session_state.get('embedding_model', EMBEDDING_MODEL)
     if not text or not text.strip():
         logger.warning("空のテキストに対する埋め込み要求をスキップしました。")
         return None
@@ -370,7 +371,11 @@ def get_embedding(text, model=None, client=None):
             text_to_embed = text[:max_input_chars]
         else:
             text_to_embed = text
-        response = client.embeddings.create(model=effective_model, input=text_to_embed)
+        response = client.embeddings.create(
+            model=effective_model,
+            input=text_to_embed,
+            dimensions=EMBEDDING_DIMENSIONS
+        )
         return response.data[0].embedding
     except Exception as e:
         logger.error(f"埋め込みベクトル作成エラー ({effective_model}): {e}", exc_info=True)
@@ -881,7 +886,7 @@ def semantic_chunking(text, overlap_ratio, sudachi_mode, document_type, knowledg
             st.warning("作成されたチャンクがありません。処理を終了します。")
             return []
         processed_chunks_info = []
-        embedding_model_for_kb = st.session_state.get('embedding_model', "text-embedding-3-large")
+        embedding_model_for_kb = st.session_state.get('embedding_model', EMBEDDING_MODEL)
         progress_bar = st.progress(0, text="チャンク処理中...")
         total_chunks = len(chunks)
         for i, chunk_content in enumerate(chunks):
@@ -934,8 +939,8 @@ if app_mode == "ナレッジベース管理":
         st.header("ナレッジベース作成")
         kb_name_input = st.text_input("ナレッジベース名*", value=st.session_state.get('knowledge_base_name', f"kb_{datetime.now().strftime('%Y%m%d')}"))
         st.session_state['knowledge_base_name'] = kb_name_input
-        embedding_model_options = ["text-embedding-3-large", "text-embedding-3-small", "text-embedding-ada-002"]
-        current_embedding_model = st.session_state.get('embedding_model', "text-embedding-3-large")
+        embedding_model_options = [EMBEDDING_MODEL, "text-embedding-3-small", "text-embedding-ada-002"]
+        current_embedding_model = st.session_state.get('embedding_model', EMBEDDING_MODEL)
         embedding_model_idx = embedding_model_options.index(current_embedding_model) if current_embedding_model in embedding_model_options else 0
         selected_embedding_model = st.selectbox("埋め込みモデル*", embedding_model_options, index=embedding_model_idx)
         st.session_state['embedding_model'] = selected_embedding_model
