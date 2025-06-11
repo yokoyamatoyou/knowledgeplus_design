@@ -25,6 +25,8 @@ from knowledge_gpt_app.app import (
     get_openai_client,
     refresh_search_engine,
     apply_intel_theme,
+    list_knowledge_bases,
+    search_multiple_knowledge_bases,
 )
 from mm_kb_builder.app import (
     process_cad_file,
@@ -113,124 +115,145 @@ def display_thumbnails(kb_name: str) -> None:
 # Apply common theme styling
 apply_intel_theme()
 
-st.title("Unified Knowledge Upload")
+st.title("KnowledgePlus")
 
-kb_name = st.text_input("Knowledge Base Name", "unified_kb")
+mode = st.sidebar.radio("モード選択", ["ナレッジ検索", "ナレッジ構築"])
 
-st.sidebar.header("Actions")
-max_tokens = st.sidebar.number_input("Max GPT tokens", 100, 4000, 1000, 100)
-num_pairs = st.sidebar.number_input("Q&A pairs", 1, 10, 3, 1)
-if st.sidebar.button("FAQ生成"):
-    client = get_openai_client()
-    if not client:
-        st.sidebar.error("OpenAI client unavailable")
+if mode == "ナレッジ検索":
+    st.header("ナレッジ検索")
+    kb_list = list_knowledge_bases()
+    kb_names = [kb["name"] for kb in kb_list]
+    if not kb_names:
+        st.info("利用可能なナレッジベースがありません。")
     else:
-        with st.spinner("Generating FAQs..."):
-            count = generate_faqs_from_chunks(kb_name, max_tokens, num_pairs, client=client)
+        selected_kbs = st.multiselect("検索対象ナレッジベース", kb_names, default=kb_names[:1])
+        query = st.text_input("検索クエリ")
+        if st.button("検索実行"):
+            results, not_found = search_multiple_knowledge_bases(query, selected_kbs)
+            if not results:
+                st.info("検索結果が見つかりませんでした。")
+            else:
+                for r in results:
+                    st.markdown(f"**KB: {r.get('kb_name','N/A')} / 類似度: {r.get('similarity',0):.2f}**")
+                    st.text_area("チャンク内容", r.get('text',''), height=120)
+
+if mode == "ナレッジ構築":
+    kb_name = st.text_input("Knowledge Base Name", "unified_kb")
+
+    st.sidebar.header("Actions")
+    max_tokens = st.sidebar.number_input("Max GPT tokens", 100, 4000, 1000, 100)
+    num_pairs = st.sidebar.number_input("Q&A pairs", 1, 10, 3, 1)
+    if st.sidebar.button("FAQ生成"):
+        client = get_openai_client()
+        if not client:
+            st.sidebar.error("OpenAI client unavailable")
+        else:
+            with st.spinner("Generating FAQs..."):
+                count = generate_faqs_from_chunks(kb_name, max_tokens, num_pairs, client=client)
+                refresh_search_engine(kb_name)
+            st.sidebar.success(f"{count} FAQs created")
+
+    all_types = [
+        'pdf', 'docx', 'xlsx', 'xls', 'txt', 'md', 'html', 'htm'
+    ] + SUPPORTED_IMAGE_TYPES + SUPPORTED_CAD_TYPES
+    uploaded_files = st.file_uploader(
+        "Upload Files",
+        type=all_types,
+        accept_multiple_files=True,
+    )
+
+    process_mode = st.radio(
+        "処理モード",
+        ["個別処理", "まとめて処理"],
+        horizontal=True,
+    )
+    index_mode = st.radio(
+        "インデックス更新",
+        ["自動(処理後)", "手動"],
+        horizontal=True,
+    )
+    if index_mode == "手動":
+        if st.button("検索インデックス更新"):
             refresh_search_engine(kb_name)
-        st.sidebar.success(f"{count} FAQs created")
+            st.success("検索インデックスを更新しました")
+    auto_faq = st.checkbox("処理後にFAQも生成する")
 
-all_types = [
-    'pdf', 'docx', 'xlsx', 'xls', 'txt', 'md', 'html', 'htm'
-] + SUPPORTED_IMAGE_TYPES + SUPPORTED_CAD_TYPES
-uploaded_files = st.file_uploader(
-    "Upload Files",
-    type=all_types,
-    accept_multiple_files=True,
-)
-
-process_mode = st.radio(
-    "処理モード",
-    ["個別処理", "まとめて処理"],
-    horizontal=True,
-)
-index_mode = st.radio(
-    "インデックス更新",
-    ["自動(処理後)", "手動"],
-    horizontal=True,
-)
-if index_mode == "手動":
-    if st.button("検索インデックス更新"):
-        refresh_search_engine(kb_name)
-        st.success("検索インデックスを更新しました")
-auto_faq = st.checkbox("処理後にFAQも生成する")
-
-if uploaded_files and st.button("Process Files"):
-    client = get_openai_client()
-    if not client:
-        st.error("OpenAI client unavailable")
-    else:
-        auto_update = index_mode == "自動(処理後)"
-        batch = process_mode == "まとめて処理"
-        for file in uploaded_files:
-            with st.spinner(f"Processing {file.name}..."):
-                ext = file.name.split('.')[-1].lower()
-                bytes_data = file.getvalue()
-                file.seek(0)
-                if ext in ['pdf', 'docx', 'xlsx', 'xls', 'txt', 'md', 'html', 'htm']:
-                    text = read_file(file)
-                    if text:
-                        semantic_chunking(
-                            text,
-                            15,
-                            'C',
-                            'auto',
-                            kb_name,
-                            client,
-                            original_filename=file.name,
+    if uploaded_files and st.button("Process Files"):
+        client = get_openai_client()
+        if not client:
+            st.error("OpenAI client unavailable")
+        else:
+            auto_update = index_mode == "自動(処理後)"
+            batch = process_mode == "まとめて処理"
+            for file in uploaded_files:
+                with st.spinner(f"Processing {file.name}..."):
+                    ext = file.name.split('.')[-1].lower()
+                    bytes_data = file.getvalue()
+                    file.seek(0)
+                    if ext in ['pdf', 'docx', 'xlsx', 'xls', 'txt', 'md', 'html', 'htm']:
+                        text = read_file(file)
+                        if text:
+                            semantic_chunking(
+                                text,
+                                15,
+                                'C',
+                                'auto',
+                                kb_name,
+                                client,
+                                original_filename=file.name,
+                                original_bytes=bytes_data,
+                                refresh=auto_update and not batch,
+                            )
+                            add_thumbnail(str(uuid.uuid4()), "text", extract_mid_text(text))
+                            st.success(f"Processed text file {file.name}")
+                        else:
+                            st.error(f"Failed to read {file.name}")
+                    elif ext in SUPPORTED_IMAGE_TYPES + SUPPORTED_CAD_TYPES:
+                        if ext in SUPPORTED_CAD_TYPES:
+                            img_b64, cad_meta = process_cad_file(file, ext)
+                            if img_b64 is None:
+                                st.error(f"CAD processing failed: {cad_meta.get('error')}")
+                                continue
+                        else:
+                            img_b64 = encode_image_to_base64(file)
+                            cad_meta = None
+                        analysis = analyze_image_with_gpt4o(img_b64, file.name, cad_meta, client)
+                        if "error" in analysis:
+                            st.error(f"Analysis failed for {file.name}: {analysis['error']}")
+                            continue
+                        chunk = create_comprehensive_search_chunk(analysis, {})
+                        embedding = get_embedding(chunk, client)
+                        if embedding is None:
+                            st.error(f"Embedding failed for {file.name}")
+                            continue
+                        item_id = str(uuid.uuid4())
+                        success, _ = save_unified_knowledge_item(
+                            item_id,
+                            analysis,
+                            {},
+                            embedding,
+                            file.name,
+                            img_b64,
                             original_bytes=bytes_data,
                             refresh=auto_update and not batch,
                         )
-                        add_thumbnail(str(uuid.uuid4()), "text", extract_mid_text(text))
-                        st.success(f"Processed text file {file.name}")
+                        if success:
+                            add_thumbnail(item_id, "image", img_b64)
+                            st.success(f"Processed image/CAD file {file.name}")
+                        else:
+                            st.error(f"Saving failed for {file.name}")
                     else:
-                        st.error(f"Failed to read {file.name}")
-                elif ext in SUPPORTED_IMAGE_TYPES + SUPPORTED_CAD_TYPES:
-                    if ext in SUPPORTED_CAD_TYPES:
-                        img_b64, cad_meta = process_cad_file(file, ext)
-                        if img_b64 is None:
-                            st.error(f"CAD processing failed: {cad_meta.get('error')}")
-                            continue
-                    else:
-                        img_b64 = encode_image_to_base64(file)
-                        cad_meta = None
-                    analysis = analyze_image_with_gpt4o(img_b64, file.name, cad_meta, client)
-                    if "error" in analysis:
-                        st.error(f"Analysis failed for {file.name}: {analysis['error']}")
-                        continue
-                    chunk = create_comprehensive_search_chunk(analysis, {})
-                    embedding = get_embedding(chunk, client)
-                    if embedding is None:
-                        st.error(f"Embedding failed for {file.name}")
-                        continue
-                    item_id = str(uuid.uuid4())
-                    success, _ = save_unified_knowledge_item(
-                        item_id,
-                        analysis,
-                        {},
-                        embedding,
-                        file.name,
-                        img_b64,
-                        original_bytes=bytes_data,
-                        refresh=auto_update and not batch,
-                    )
-                    if success:
-                        add_thumbnail(item_id, "image", img_b64)
-                        st.success(f"Processed image/CAD file {file.name}")
-                    else:
-                        st.error(f"Saving failed for {file.name}")
-                else:
-                    st.warning(f"Unsupported file type: {file.name}")
+                        st.warning(f"Unsupported file type: {file.name}")
 
-        if batch and auto_update:
-            refresh_search_engine(kb_name)
-        if auto_faq:
-            with st.spinner("Generating FAQs..."):
-                count = generate_faqs_from_chunks(kb_name, max_tokens, num_pairs, client=client)
-                if auto_update:
-                    refresh_search_engine(kb_name)
-            st.success(f"{count} FAQs created")
-        if not auto_update:
-            st.info("処理後は『検索インデックス更新』ボタンを押してください")
+            if batch and auto_update:
+                refresh_search_engine(kb_name)
+            if auto_faq:
+                with st.spinner("Generating FAQs..."):
+                    count = generate_faqs_from_chunks(kb_name, max_tokens, num_pairs, client=client)
+                    if auto_update:
+                        refresh_search_engine(kb_name)
+                st.success(f"{count} FAQs created")
+            if not auto_update:
+                st.info("処理後は『検索インデックス更新』ボタンを押してください")
 
-display_thumbnails(kb_name)
+    display_thumbnails(kb_name)
