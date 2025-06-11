@@ -57,7 +57,7 @@ if st.sidebar.button("FAQ生成"):
         st.sidebar.success(f"{count} FAQs created")
 
 all_types = [
-    'pdf', 'docx', 'xlsx', 'xls', 'txt'
+    'pdf', 'docx', 'xlsx', 'xls', 'txt', 'md', 'html', 'htm'
 ] + SUPPORTED_IMAGE_TYPES + SUPPORTED_CAD_TYPES
 uploaded_files = st.file_uploader(
     "Upload Files",
@@ -75,7 +75,7 @@ if uploaded_files and st.button("Process Files"):
                 ext = file.name.split('.')[-1].lower()
                 bytes_data = file.getvalue()
                 file.seek(0)
-                if ext in ['pdf', 'docx', 'xlsx', 'xls', 'txt']:
+                if ext in ['pdf', 'docx', 'xlsx', 'xls', 'txt', 'md', 'html', 'htm']:
                     text = read_file(file)
                     if text:
                         semantic_chunking(

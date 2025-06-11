@@ -42,6 +42,13 @@ try:
     from PIL import Image
 except Exception:
     Image = None
+
+try:
+    import openpyxl
+    EXCEL_SUPPORT = True
+except Exception:
+    openpyxl = None
+    EXCEL_SUPPORT = False
 import time
 from sentence_transformers import SentenceTransformer
 from rank_bm25 import BM25Okapi
@@ -657,11 +664,42 @@ def read_file(file):
         elif file_type in ['xlsx', 'xls']:
             file_bytes = BytesIO(file.read())
             file.seek(0)
-            excel_file = pd.ExcelFile(file_bytes)
-            for sheet_name in excel_file.sheet_names:
-                sheet_df = excel_file.parse(sheet_name)
-                content += f"# シート: {sheet_name}\n"
-                content += sheet_df.to_string() + "\n\n"
+            if EXCEL_SUPPORT:
+                wb = openpyxl.load_workbook(file_bytes, data_only=True)
+                for sheet in wb.worksheets:
+                    content += f"# シート: {sheet.title}\n"
+                    for row in sheet.iter_rows(values_only=True):
+                        cells = ["" if c is None else str(c) for c in row]
+                        content += "\t".join(cells) + "\n"
+                    if OCR_SUPPORT and Image and getattr(sheet, "_images", []):
+                        for img in sheet._images:
+                            try:
+                                img_bytes = img._data()
+                                img_obj = Image.open(BytesIO(img_bytes))
+                                ocr = pytesseract.image_to_string(img_obj, lang='jpn+eng')
+                                if ocr.strip():
+                                    content += ocr + "\n"
+                            except Exception:
+                                pass
+            else:
+                excel_file = pd.ExcelFile(file_bytes)
+                for sheet_name in excel_file.sheet_names:
+                    sheet_df = excel_file.parse(sheet_name)
+                    content += f"# シート: {sheet_name}\n"
+                    content += sheet_df.to_string() + "\n\n"
+        elif file_type in ['md', 'markdown', 'html', 'htm']:
+            content = file.read().decode('utf-8', errors='replace')
+            file.seek(0)
+            if OCR_SUPPORT and Image:
+                for m in re.finditer(r"data:image/[^;]+;base64,([A-Za-z0-9+/=]+)", content):
+                    try:
+                        img_bytes = base64.b64decode(m.group(1))
+                        img = Image.open(BytesIO(img_bytes))
+                        ocr = pytesseract.image_to_string(img, lang='jpn+eng')
+                        if ocr.strip():
+                            content += "\n" + ocr
+                    except Exception:
+                        pass
         elif file_type == 'doc':
             st.error("doc形式はdocxに変換してから再度アップロードしてください。")
             return None
