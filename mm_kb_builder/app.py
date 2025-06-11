@@ -19,7 +19,15 @@ from shared.upload_utils import (
     BASE_KNOWLEDGE_DIR as SHARED_KB_DIR,
     ensure_openai_key,
 )
-from knowledge_gpt_app.app import refresh_search_engine
+
+def _refresh_search_engine(kb_name: str) -> None:
+    """Dynamically import and call refresh_search_engine to avoid circular imports."""
+    try:
+        from knowledge_gpt_app.app import refresh_search_engine as _refresh
+    except Exception as e:  # pragma: no cover - import may fail in isolation
+        logging.error(f"refresh_search_engine import failed: {e}")
+        return
+    _refresh(kb_name)
 
 # ★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★★
 # インテル風デザインテーマ適用
@@ -981,7 +989,7 @@ def save_unified_knowledge_item(image_id, analysis_result, user_additions, embed
             original_bytes=original_bytes,
             image_bytes=image_bytes,
         )
-        refresh_search_engine(kb_name)
+        _refresh_search_engine(kb_name)
         file_link = paths.get("original_file_path", "")
 
         return True, {
