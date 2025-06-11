@@ -16,3 +16,5 @@ Uploaded images and text are processed into embeddings so that the chatbot can s
    ```
 
 Processed data will be stored under `knowledge_base/multimodal_knowledge_base/`.
+
+Sample metadata for a demo knowledge base is under `multimodal_data/`. The accompanying images are not tracked in git; copy any example images into `multimodal_data/multimodal_knowledge_base/images/` before running the app.

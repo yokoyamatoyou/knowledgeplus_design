@@ -190,3 +190,22 @@ without altering existing data or indexes.
   [ Save ]
   ```
 
+
+### Phase 6 Test Plan
+
+- **Objective:** Ensure the unified application is stable after merging all features.
+- **Unit tests:**
+  - Add cases in `tests/` for the upload helpers and metadata writers.
+  - Cover both text documents and image files so different branches of the processing logic are exercised.
+  - Verify that versioning logic works when files with the same name but different contents are uploaded.
+- **Integration tests:**
+  - Simulate the typical workflow: upload several files, perform a search, start a chat and finally generate FAQs.
+  - Check that the sidebar navigation remains visible at every step and links to each mode work correctly.
+- **Test data:**
+  - Keep small sample files under `tests/data` so that upload-related tests have stable inputs.
+  - Image assets for the demo knowledge base are omitted; copy them manually if needed.
+  - Some tests hit the real OpenAI API. They require `OPENAI_API_KEY` to be set in the environment.
+  - API calls may be mocked when needed using the `monkeypatch` fixture.
+- **Documentation:**
+  - Record results for each phase in this file after tests run so that the state before coding is preserved.
+  - Update the README with instructions on how to run the test suite using `pytest`.
