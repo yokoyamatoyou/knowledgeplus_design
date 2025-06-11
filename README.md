@@ -81,3 +81,10 @@ python reindex_kb.py <kb_name>
 ```
 
 This reloads all chunks from disk and regenerates the BM25 index.
+
+### Phase 5 Notes
+
+Minor UI fixes were made in the unified app. A common Intel-themed style is now
+applied on startup and file processing is wrapped in `st.spinner` so progress is
+clear. A small `torch.classes` workaround remains in place to avoid Streamlit
+reload errors.

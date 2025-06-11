@@ -63,6 +63,13 @@ python generate_faq.py my_kb --max-tokens 500 --pairs 5
 In the Streamlit interface, enter a knowledge base name and click **FAQ生成** to
 produce FAQs with the configured token and pair counts.
 
+### Phase 5 Implementation
+
+The unified app now applies a shared Intel-inspired theme and displays a
+`st.spinner` while uploads are processed. A `torch.classes` workaround prevents
+reload issues during development. These adjustments polish the user interface
+without altering existing data or indexes.
+
 ## Local Storage
 - **Objective:** Keep all data on disk so that the app can run offline.
 - **Key tasks:**
