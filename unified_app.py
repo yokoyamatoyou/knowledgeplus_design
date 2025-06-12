@@ -28,6 +28,10 @@ from knowledge_gpt_app.app import (
     list_knowledge_bases,
     search_multiple_knowledge_bases,
 )
+from knowledge_gpt_app.gpt_handler import (
+    generate_gpt_response,
+    get_persona_list,
+)
 from mm_kb_builder.app import (
     process_cad_file,
     encode_image_to_base64,
@@ -117,9 +121,60 @@ apply_intel_theme()
 
 st.title("KnowledgePlus")
 
-mode = st.sidebar.radio("モード選択", ["ナレッジ検索", "ナレッジ構築"])
+menu_options = ["GPTモード", "ナレッジ検索", "ナレッジ構築"]
+if "nav_mode" not in st.session_state:
+    st.session_state["nav_mode"] = "ナレッジ検索"
+menu_index = menu_options.index(st.session_state["nav_mode"])
+mode = st.sidebar.radio("メニュー", menu_options, index=menu_index)
+st.session_state["nav_mode"] = mode
 
-if mode == "ナレッジ検索":
+if mode == "GPTモード":
+    st.header("GPTチャット")
+    st.sidebar.header("チャット設定")
+    personas = get_persona_list()
+    persona_names = [p["name"] for p in personas]
+    persona_map = {p["name"]: p["id"] for p in personas}
+    current_persona = st.session_state.get("chat_persona", persona_names[0] if persona_names else "")
+    idx = persona_names.index(current_persona) if current_persona in persona_names else 0
+    sel_name = st.sidebar.selectbox("AIペルソナ", persona_names, index=idx)
+    st.session_state["chat_persona"] = sel_name
+    temp = st.sidebar.slider("温度", 0.0, 1.0, float(st.session_state.get("chat_temp", 0.7)), 0.05)
+    st.session_state["chat_temp"] = temp
+    resp_opts = ["簡潔", "普通", "詳細"]
+    resp_len = st.sidebar.radio("応答の長さ", resp_opts, index=resp_opts.index(st.session_state.get("chat_resp_len", "普通")), horizontal=True)
+    st.session_state["chat_resp_len"] = resp_len
+
+    messages = st.session_state.get("chat_messages", [])
+    for m in messages:
+        with st.chat_message(m["role"]):
+            st.markdown(m["content"])
+
+    user_input = st.chat_input("メッセージを入力")
+    if user_input:
+        messages.append({"role": "user", "content": user_input})
+        with st.chat_message("user"):
+            st.markdown(user_input)
+        with st.chat_message("assistant"):
+            placeholder = st.empty()
+            placeholder.markdown("⟲ 考え中...")
+            client = get_openai_client()
+            if client:
+                reply = generate_gpt_response(
+                    user_input,
+                    conversation_history=[m for m in messages[:-1] if m["role"] in ["user", "assistant"]],
+                    persona=persona_map.get(sel_name, "default"),
+                    temperature=temp,
+                    response_length=resp_len,
+                    client=client,
+                )
+                placeholder.markdown(reply)
+            else:
+                reply = "OpenAI client unavailable"
+                placeholder.error(reply)
+        messages.append({"role": "assistant", "content": reply})
+        st.session_state["chat_messages"] = messages
+
+elif mode == "ナレッジ検索":
     st.header("ナレッジ検索")
     kb_list = list_knowledge_bases()
     kb_names = [kb["name"] for kb in kb_list]
