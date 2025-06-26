@@ -49,6 +49,13 @@ export OPENAI_API_KEY=your_api_key_here
 
 The applications will fail to start if this variable is missing.
 
+## IPAexGothic font
+
+`knowledge_gpt_app/utils/export.py` generates PDF files and requires the
+`ipaexg.ttf` font to render Japanese text.  Download the IPAexGothic font from
+<https://moji.or.jp/ipafont/> and place the `ipaexg.ttf` file in the repository
+root so that PDF export works correctly.
+
 ## Running the app
 
 Launch the unified interface using the helper scripts at the repository root. These scripts run `unified_app.py` which accepts documents, images and CAD files in one place:

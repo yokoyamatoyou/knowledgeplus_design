@@ -45,9 +45,14 @@ def export_conversation_to_pdf(conversation_id, messages):
     # PDFの作成
     pdf = FPDF()
     pdf.add_page()
-    
+
     # フォント設定
-    pdf.add_font('IPAGothic', '', 'ipaexg.ttf', uni=True)
+    font_path = Path("ipaexg.ttf")
+    if not font_path.exists():
+        raise FileNotFoundError(
+            "ipaexg.ttf not found. Download IPAexGothic from https://moji.or.jp/ipafont/ and place it in the repository root."
+        )
+    pdf.add_font('IPAGothic', '', str(font_path), uni=True)
     pdf.set_font('IPAGothic', '', 10)
     
     # タイトル
