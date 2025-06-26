@@ -380,15 +380,13 @@ def apply_intel_theme():
     </style>
     """, unsafe_allow_html=True)
 
-# カレントディレクトリの設定
-current_dir = os.path.dirname(os.path.abspath(__file__))
-os.chdir(current_dir)
-print(f"カレントディレクトリを設定: {current_dir}")
+# スクリプトディレクトリの解決
+current_dir = Path(__file__).resolve().parent
 
 # 親ディレクトリ(リポジトリルート)をパスに追加
-repo_root = os.path.dirname(current_dir)
-if repo_root not in sys.path:
-    sys.path.insert(0, repo_root)
+repo_root = current_dir.parent
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
 
 # 強化版NLTKリソースダウンロード関数
 def ensure_nltk_resources():
@@ -468,7 +466,7 @@ print(f"Knowledge base directory: {BASE_KNOWLEDGE_DIR}")
 RAG_BASE_DIR = BASE_KNOWLEDGE_DIR
 
 # ワークスペースディレクトリと会話ディレクトリ
-DATA_DIR = Path(current_dir) / "data"
+DATA_DIR = current_dir / "data"
 DATA_DIR.mkdir(exist_ok=True)
 CONVERSATION_DIR = DATA_DIR / "conversations"
 CONVERSATION_DIR.mkdir(exist_ok=True)
@@ -905,7 +903,8 @@ def list_knowledge_bases():
 
 def create_run_script():
     try:
-        with open('start_app.bat', 'w', encoding='utf-8') as f:
+        script_dir = current_dir
+        with open(script_dir / 'start_app.bat', 'w', encoding='utf-8') as f:
             f.write('@echo off\nchcp 65001 > nul\n')
             f.write('echo RAG System Tool Startup...\n')
             f.write('if not exist .env (\n')
@@ -918,7 +917,7 @@ def create_run_script():
             f.write('  for /f "delims=" %%x in (.env) do set "%%x"\n')
             f.write(')\n')
             f.write('cd /d "%~dp0"\nstart "" "http://localhost:8501"\nstreamlit run app.py\npause\n')
-        with open('start_app.sh', 'w', encoding='utf-8', newline='\n') as f:
+        with open(script_dir / 'start_app.sh', 'w', encoding='utf-8', newline='\n') as f:
             f.write('#!/bin/bash\necho "RAG System Tool Startup..."\n')
             f.write('if [ ! -f .env ]; then\n')
             f.write('  echo "APIキーが.envファイルに見つかりません。入力してください。"\n')
@@ -930,7 +929,8 @@ def create_run_script():
             f.write('DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"\n')
             f.write('if [[ "$OSTYPE" == "darwin"* ]]; then\n  open http://localhost:8501\nelif [[ "$OSTYPE" == "linux-gnu"* ]]; then\n  xdg-open http://localhost:8501 || sensible-browser http://localhost:8501\nfi\n')
             f.write('streamlit run "$DIR/app.py"\n')
-        if os.name != 'nt': os.chmod('start_app.sh', 0o755)
+        if os.name != 'nt':
+            os.chmod(script_dir / 'start_app.sh', 0o755)
         return "起動スクリプトを作成しました（start_app.bat / start_app.sh）。"
     except Exception as e:
         logger.error(f"起動スクリプト作成エラー: {e}", exc_info=True)
@@ -1926,3 +1926,6 @@ elif app_mode == "chatGPT":
 
 st.markdown("---")
 st.markdown('<div class="footer-text">RAGシステム統合ツール v1.1.0 - AIによる知識活用を支援</div>', unsafe_allow_html=True)
+
+if __name__ == "__main__":
+    os.chdir(current_dir)

@@ -447,13 +447,12 @@ except ImportError:
         st.info("高度検索機能が無効です（推奨: sudachipy, または faiss + rank-bm25 + mecab-python3）")
 
 # 設定
-current_dir = os.path.dirname(os.path.abspath(__file__))
-os.chdir(current_dir)
+current_dir = Path(__file__).resolve().parent
 
 # 親ディレクトリ(リポジトリルート)をパスに追加
-repo_root = os.path.dirname(current_dir)
-if repo_root not in sys.path:
-    sys.path.insert(0, repo_root)
+repo_root = current_dir.parent
+if str(repo_root) not in sys.path:
+    sys.path.insert(0, str(repo_root))
 
 # ロギング設定
 logging.basicConfig(
@@ -1635,6 +1634,9 @@ with tab3:
 # フッター
 st.markdown("---")
 st.markdown(
-    '<div class="footer-text">マルチモーダルナレッジ構築ツール v3.0.0 - 既存RAGシステム統合対応版</div>', 
+    '<div class="footer-text">マルチモーダルナレッジ構築ツール v3.0.0 - 既存RAGシステム統合対応版</div>',
     unsafe_allow_html=True
 )
+
+if __name__ == "__main__":
+    os.chdir(current_dir)
