@@ -5,6 +5,7 @@ from knowledge_gpt_app.app import (
     read_file,
     semantic_chunking,
     get_openai_client,
+    refresh_search_engine,
 )
 from knowledge_gpt_app.gpt_handler import generate_gpt_response
 from ui_modules.thumbnail_editor import display_thumbnail_grid
@@ -131,26 +132,45 @@ if mode == "Search" and st.session_state.get("search_executed"):
 if mode == "Upload":
     st.divider()
     with st.expander("ナレッジを追加する"):
-        file = st.file_uploader("ファイルを選択")
-        if file is not None:
-            with st.spinner("ファイルを解析中..."):
-                text = read_file(file)
-            with st.spinner("ベクトル化しています..."):
-                if text:
-                    client = get_openai_client()
-                    if client:
-                        semantic_chunking(
-                            text,
-                            15,
-                            "C",
-                            "auto",
-                            "default_kb",
-                            client,
-                            original_filename=file.name,
-                            original_bytes=file.getvalue(),
-                            refresh=True,
-                        )
+        process_mode = st.radio("処理モード", ["個別処理", "まとめて処理"])
+        index_mode = st.radio("インデックス更新", ["自動(処理後)", "手動"])
+
+        files = st.file_uploader(
+            "ファイルを選択",
+            accept_multiple_files=process_mode == "まとめて処理",
+        )
+
+        if files:
+            if not isinstance(files, list):
+                files = [files]
+
+            for file in files:
+                with st.spinner("ファイルを解析中..."):
+                    text = read_file(file)
+                with st.spinner("ベクトル化しています..."):
+                    if text:
+                        client = get_openai_client()
+                        if client:
+                            semantic_chunking(
+                                text,
+                                15,
+                                "C",
+                                "auto",
+                                "default_kb",
+                                client,
+                                original_filename=file.name,
+                                original_bytes=file.getvalue(),
+                                refresh=index_mode == "自動(処理後)" and process_mode == "個別処理",
+                            )
+
+            if process_mode == "まとめて処理" and index_mode == "自動(処理後)":
+                refresh_search_engine("default_kb")
+
             st.toast("アップロード完了")
+
+        if index_mode == "手動":
+            if st.button("検索インデックス更新"):
+                refresh_search_engine("default_kb")
 
     st.divider()
     display_thumbnail_grid("default_kb")
