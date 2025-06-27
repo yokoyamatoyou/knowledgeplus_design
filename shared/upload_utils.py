@@ -95,3 +95,13 @@ def save_processed_data(
         paths["metadata_path"] = str(meta_path)
 
     return paths
+
+
+def save_user_metadata(kb_name: str, item_id: str, title: str, tags: list[str]) -> str:
+    """Store user-provided metadata for an item and return the file path."""
+    kb_dir = BASE_KNOWLEDGE_DIR / kb_name / "metadata"
+    kb_dir.mkdir(parents=True, exist_ok=True)
+    meta_path = kb_dir / f"{item_id}_user.json"
+    with open(meta_path, "w", encoding="utf-8") as f:
+        json.dump({"title": title, "tags": tags}, f, ensure_ascii=False, indent=2)
+    return str(meta_path)
