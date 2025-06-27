@@ -134,3 +134,7 @@ Sample files used by the tests live under `tests/data`.  For tests that
 exercise the OpenAI API, make sure the `OPENAI_API_KEY` environment variable is
 exported so the calls succeed.  These API tests can be disabled with
 `-k "not openai"` when running `pytest` if desired.
+
+## Repository Guidelines
+
+For current development tips and repository consistency checks, see [docs/integration_plan.md](docs/integration_plan.md#additional-repository-guidance). Key points include avoiding NumPy array truth checks, preventing nested Streamlit expanders, centralizing configuration and file utilities, and increasing automated tests and linting.

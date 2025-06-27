@@ -209,3 +209,25 @@ without altering existing data or indexes.
 - **Documentation:**
   - Record results for each phase in this file after tests run so that the state before coding is preserved.
   - Update the README with instructions on how to run the test suite using `pytest`.
+
+### Additional Repository Guidance
+
+The following notes summarize recent advice and checks to keep this repository consistent.
+
+- **NumPy array checks**: when verifying embeddings, avoid `if chunk_embedding:` because NumPy arrays raise a `ValueError`. Use `if chunk_embedding is not None:` instead. Search `knowledge_search.py` or app modules for this pattern and update as needed.
+- **Expander nesting**: `st.expander` cannot be nested in Streamlit. Replace inner expanders with `st.popover` and ensure no nested expanders remain in `knowledge_gpt_app/app.py`.
+- **Entry point consolidation**: use `unified_app.py` as the main entry point and progressively split UI and core logic into `ui_modules/`, `core/` and `shared/` packages.
+- **Configuration management**: store secrets in `.env` while static defaults live in `config.py`.
+- **Data storage utilities**: centralize file-saving helpers in `shared/upload_utils.py` so paths are handled consistently.
+- **Logging and error handling**: use Python's logging module with proper levels and include tracebacks to identify failures quickly.
+- **UI consistency**: apply the same CSS across apps, leverage `st.spinner` or `st.progress`, and enhance interactive elements such as thumbnail metadata editing.
+
+#### Additional Improvement Ideas
+
+- Expand automated tests with `pytest` and enable CI (e.g., GitHub Actions).
+- Add type hints and docstrings; consider generating documentation via Sphinx or pdoc.
+- Enforce code style using tools such as `black`, `ruff` and `isort`; pre-commit hooks are useful.
+- Evaluate authentication needs, possibly with `streamlit-authenticator`.
+- Plan for concurrent users by managing sessions carefully.
+- Keep the storage layer modular so new data sources can be integrated.
+- Extend the README with quick start notes, environment variable samples and FAQs for contributors.
