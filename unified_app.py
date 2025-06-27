@@ -10,7 +10,9 @@ from knowledge_gpt_app.gpt_handler import generate_gpt_response
 from ui_modules.thumbnail_editor import display_thumbnail_grid
 
 # Global page config and styling
-st.set_page_config(layout="wide", page_title="KNOWLEDGE+")
+st.set_page_config(
+    layout="wide", page_title="KNOWLEDGE+", initial_sidebar_state="expanded"
+)
 
 st.markdown(
     """
@@ -66,21 +68,26 @@ st.title("KNOWLEDGE+")
 インデックス更新
 検索インデックス更新"""
 
-# Initialize search state
+# Sidebar navigation
+mode = st.sidebar.radio("メニュー", ["Upload", "Search", "Chat", "FAQ"])
+
 if "search_executed" not in st.session_state:
     st.session_state["search_executed"] = False
 
-query = st.text_input(
-    "main_search_box",
-    placeholder="キーワードで検索、またはAIへの質問を入力...",
-    label_visibility="collapsed",
-)
+if mode == "Search":
+    query = st.text_input(
+        "main_search_box",
+        placeholder="キーワードで検索、またはAIへの質問を入力...",
+        label_visibility="collapsed",
+    )
 
-if st.button("検索"):
-    st.session_state["search_executed"] = True
-    kb_names = [kb["name"] for kb in list_knowledge_bases()]
-    st.session_state["results"], _ = search_multiple_knowledge_bases(query, kb_names)
-    st.session_state["last_query"] = query
+    if st.button("検索"):
+        st.session_state["search_executed"] = True
+        kb_names = [kb["name"] for kb in list_knowledge_bases()]
+        st.session_state["results"], _ = search_multiple_knowledge_bases(
+            query, kb_names
+        )
+        st.session_state["last_query"] = query
 
 
 def render_document_card(doc):
@@ -92,7 +99,7 @@ def render_document_card(doc):
     )
 
 
-if st.session_state.get("search_executed"):
+if mode == "Search" and st.session_state.get("search_executed"):
     tabs = st.tabs(["AIによる要約", "関連ナレッジ一覧"])
     with tabs[0]:
         results = st.session_state.get("results", [])
@@ -121,28 +128,33 @@ if st.session_state.get("search_executed"):
         for doc in st.session_state.get("results", []):
             render_document_card(doc)
 
-st.divider()
-with st.expander("ナレッジを追加する"):
-    file = st.file_uploader("ファイルを選択")
-    if file is not None:
-        with st.spinner("ファイルを解析中..."):
-            text = read_file(file)
-        with st.spinner("ベクトル化しています..."):
-            if text:
-                client = get_openai_client()
-                if client:
-                    semantic_chunking(
-                        text,
-                        15,
-                        "C",
-                        "auto",
-                        "default_kb",
-                        client,
-                        original_filename=file.name,
-                        original_bytes=file.getvalue(),
-                        refresh=True,
-                    )
-        st.toast("アップロード完了")
+if mode == "Upload":
+    st.divider()
+    with st.expander("ナレッジを追加する"):
+        file = st.file_uploader("ファイルを選択")
+        if file is not None:
+            with st.spinner("ファイルを解析中..."):
+                text = read_file(file)
+            with st.spinner("ベクトル化しています..."):
+                if text:
+                    client = get_openai_client()
+                    if client:
+                        semantic_chunking(
+                            text,
+                            15,
+                            "C",
+                            "auto",
+                            "default_kb",
+                            client,
+                            original_filename=file.name,
+                            original_bytes=file.getvalue(),
+                            refresh=True,
+                        )
+            st.toast("アップロード完了")
 
-st.divider()
-display_thumbnail_grid("default_kb")
+    st.divider()
+    display_thumbnail_grid("default_kb")
+elif mode == "Chat":
+    st.info("Chat mode is under construction.")
+elif mode == "FAQ":
+    st.info("FAQ generation is under construction.")
