@@ -22,6 +22,10 @@ export OPENAI_API_KEY=your_api_key_here
 set OPENAI_API_KEY=your_api_key_here
 ```
 
+### Font Requirement
+
+`knowledge_gpt_app/utils/export.py` needs the IPAexGothic font (`ipaexg.ttf`) to export PDFs. Download the font from [https://moji.or.jp/ipafont/](https://moji.or.jp/ipafont/) and place `ipaexg.ttf` in the repository root.
+
 ## Running the Application
 
 Use the helper scripts at the repository root to launch the unified interface:
