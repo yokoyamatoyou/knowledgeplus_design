@@ -4,7 +4,6 @@ from knowledge_gpt_app.app import (
     search_multiple_knowledge_bases,
     read_file,
     semantic_chunking,
-    refresh_search_engine,
     get_openai_client,
 )
 from knowledge_gpt_app.gpt_handler import generate_gpt_response
@@ -143,7 +142,6 @@ with st.expander("ナレッジを追加する"):
                         original_bytes=file.getvalue(),
                         refresh=True,
                     )
-                    refresh_search_engine("default_kb")
         st.toast("アップロード完了")
 
 st.divider()
