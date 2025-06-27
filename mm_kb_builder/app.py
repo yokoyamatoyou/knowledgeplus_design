@@ -1580,9 +1580,15 @@ with tab3:
                                             
                                             # デバッグ情報
                                             if show_debug:
-                                                with st.expander("⚙ デバッグ: チャンクとファイルパス"):
+                                                with st.popover("⚙ デバッグ: チャンクとファイルパス"):
                                                     st.markdown("**検索チャンク:**")
-                                                    st.text_area("", chunk_data.get('content', ''), height=100, disabled=True, key=f"debug_chunk_{i}")
+                                                    st.text_area(
+                                                        "",
+                                                        chunk_data.get('content', ''),
+                                                        height=100,
+                                                        disabled=True,
+                                                        key=f"debug_chunk_{i}"
+                                                    )
                                                     st.markdown("**ファイルパス:**")
                                                     st.write(f"chunks: {chunks_dir / f'{item_id}.json'}")
                                                     st.write(f"embeddings: {embeddings_dir / f'{item_id}.json'}")
