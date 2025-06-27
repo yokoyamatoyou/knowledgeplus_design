@@ -8,6 +8,7 @@ from knowledge_gpt_app.app import (
     get_openai_client,
 )
 from knowledge_gpt_app.gpt_handler import generate_gpt_response
+from ui_modules.thumbnail_editor import display_thumbnail_grid
 
 # Global page config and styling
 st.set_page_config(layout="wide", page_title="KNOWLEDGE+")
@@ -144,3 +145,6 @@ with st.expander("ナレッジを追加する"):
                     )
                     refresh_search_engine("default_kb")
         st.toast("アップロード完了")
+
+st.divider()
+display_thumbnail_grid("default_kb")
