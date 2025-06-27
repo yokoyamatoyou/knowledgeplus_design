@@ -19,6 +19,8 @@ from shared.upload_utils import (
     BASE_KNOWLEDGE_DIR as SHARED_KB_DIR,
     ensure_openai_key,
 )
+from shared.file_processor import FileProcessor
+from shared.kb_builder import KnowledgeBuilder
 
 def _refresh_search_engine(kb_name: str) -> None:
     """Dynamically import and call refresh_search_engine to avoid circular imports."""
@@ -483,6 +485,10 @@ if 'processed_images' not in st.session_state:
     st.session_state.processed_images = {}
 if 'current_editing_id' not in st.session_state:
     st.session_state.current_editing_id = None
+
+# Shared processing utilities
+_file_processor = FileProcessor()
+_kb_builder = KnowledgeBuilder(_file_processor)
 
 # OpenAIクライアント取得
 @st.cache_resource
@@ -1305,59 +1311,38 @@ with tab2:
                 if not image_data.get('is_finalized', False):
                     if st.button("◎ ナレッジベースに登録", type="primary"):
                         with st.spinner("ナレッジベース登録中..."):
-                            client = get_openai_client()
-                            if client:
-                                # 最新のユーザー情報を取得
-                                current_user_additions = st.session_state.processed_images[selected_id]['user_additions']
-                                
-                                # チャンク作成
-                                search_chunk = create_comprehensive_search_chunk(analysis, current_user_additions)
-                                
-                                # 埋め込みベクトル生成
-                                embedding = get_embedding(search_chunk, client, dimensions=embedding_dims)
-                                
-                                if embedding:
-                                    # 統一ナレッジアイテムとして保存
-                                    success, saved_item = save_unified_knowledge_item(
-                                        selected_id,
-                                        analysis,
-                                        current_user_additions,
-                                        embedding,
-                                        image_data['filename'],
-                                        image_data['image_base64'],
-                                        original_bytes=image_data.get('original_bytes')
-                                    )
-                                    
-                                    if success:
-                                        st.session_state.processed_images[selected_id]['is_finalized'] = True
-                                        st.success("◎ ナレッジベースに登録完了！")
-                                        
-                                        # 登録結果表示（分離構造対応）
-                                        with st.expander("≡ 登録されたデータ（既存RAGシステム互換）", expanded=True):
-                                            st.write(f"**ID**: {saved_item['id']}")
-                                            st.write(f"**ファイルリンク**: {saved_item['file_link']}")
-                                            st.write(f"**ベクトル次元数**: {saved_item['stats']['vector_dimensions']}")
-                                            st.write(f"**キーワード数**: {saved_item['stats']['keywords_count']}")
-                                            st.write(f"**チャンク文字数**: {saved_item['stats']['chunk_length']}")
-                                            
-                                            st.markdown("**⟐ 保存先ファイル:**")
-                                            st.code(f"""
+                            current_user_additions = st.session_state.processed_images[selected_id]['user_additions']
+                            buf = io.BytesIO(image_data.get('original_bytes', b""))
+                            buf.name = image_data['filename']
+                            saved_item = _kb_builder.build_from_file(
+                                buf,
+                                analysis=analysis,
+                                image_base64=image_data['image_base64'],
+                                user_additions=current_user_additions,
+                                cad_metadata=image_data.get('cad_metadata'),
+                            )
+
+                            if saved_item:
+                                st.session_state.processed_images[selected_id]['is_finalized'] = True
+                                st.success("◎ ナレッジベースに登録完了！")
+
+                                with st.expander("≡ 登録されたデータ（既存RAGシステム互換）", expanded=True):
+                                    st.write(f"**ID**: {saved_item['id']}")
+                                    st.write(f"**ファイルリンク**: {saved_item['file_link']}")
+                                    st.write(f"**ベクトル次元数**: {saved_item['stats']['vector_dimensions']}")
+                                    st.write(f"**キーワード数**: {saved_item['stats']['keywords_count']}")
+                                    st.write(f"**チャンク文字数**: {saved_item['stats']['chunk_length']}")
+
+                                    st.markdown("**⟐ 保存先ファイル:**")
+                                    st.code(f"""
 chunks/{saved_item['id']}.json      # 検索用テキストチャンク
 embeddings/{saved_item['id']}.json  # ベクトルデータ
 metadata/{saved_item['id']}.json    # メタ情報
 images/{saved_item['id']}.jpg       # 画像ファイル
 files/{saved_item['id']}_info.json  # ファイル情報
-                                            """)
-                                        
-                                        if show_debug:
-                                            with st.expander("⚙ デバッグ: ベクトル化チャンク"):
-                                                st.text_area("", search_chunk, height=150, disabled=True)
-                                    else:
-                                        st.error("× ナレッジベース登録中にエラーが発生しました")
-                                else:
-                                    st.error("× ベクトル化に失敗しました")
+                                    """)
                             else:
-                                st.error("× OpenAIクライアントに接続できません")
+                                st.error("× ナレッジベース登録中にエラーが発生しました")
                 else:
                     st.success("◎ この画像は既にナレッジベース登録済みです")
                     
