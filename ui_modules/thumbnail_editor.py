@@ -13,13 +13,16 @@ def _load_items(kb_name: str) -> List[Dict[str, Any]]:
     meta_dir = BASE_KNOWLEDGE_DIR / kb_name / "metadata"
     if not meta_dir.exists():
         return items
-    for meta_path in meta_dir.glob("metadata_*.json"):
+    for meta_path in meta_dir.glob("*.json"):
+        name = meta_path.name
+        if name == "kb_metadata.json" or name.endswith("_user.json"):
+            continue
         try:
             with open(meta_path, "r", encoding="utf-8") as f:
                 meta = json.load(f)
         except Exception:
             continue
-        item_id = meta_path.stem.split("metadata_")[-1]
+        item_id = meta_path.stem
         text = ""
         chunk_path = meta.get("paths", {}).get("chunk_path")
         if chunk_path and Path(chunk_path).exists():
