@@ -151,7 +151,9 @@ if mode == "Upload":
 
         if index_mode == "手動":
             if st.button("検索インデックス更新"):
-                refresh_search_engine(DEFAULT_KB_NAME)
+                with st.spinner("検索エンジン更新中..."):
+                    refresh_search_engine(DEFAULT_KB_NAME)
+                st.toast("検索インデックスを更新しました")
 
     st.divider()
     display_thumbnail_grid(DEFAULT_KB_NAME)
