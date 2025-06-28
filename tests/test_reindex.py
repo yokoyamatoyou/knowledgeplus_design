@@ -10,7 +10,7 @@ pytest.importorskip("numpy")
 pytest.importorskip("rank_bm25")
 pytest.importorskip("sentence_transformers")
 pytest.importorskip("nltk")
-from knowledge_gpt_app.knowledge_search import HybridSearchEngine
+from shared.search_engine import HybridSearchEngine
 
 
 def test_reindex_loads_new_chunks(tmp_path, monkeypatch):

@@ -1,6 +1,6 @@
 import argparse
 from pathlib import Path
-from knowledge_gpt_app.knowledge_search import HybridSearchEngine
+from shared.search_engine import HybridSearchEngine
 
 
 def main():

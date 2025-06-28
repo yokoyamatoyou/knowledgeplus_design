@@ -3,6 +3,8 @@ import json
 from datetime import datetime
 from openai import OpenAI
 import logging
+from shared.search_engine import HybridSearchEngine
+from typing import Optional
 
 logger = logging.getLogger(__name__)
 
@@ -234,3 +236,35 @@ def generate_conversation_title(conversation_history, client=None):
     except Exception as e:
         logger.error(f"会話タイトル生成中にエラーが発生しました: {e}")
         return "会話"  # エラー時のフォールバックタイトル
+
+class ChatController:
+    """Manage conversations and perform RAG-based response generation."""
+
+    def __init__(self, search_engine: HybridSearchEngine):
+        self.search_engine = search_engine
+
+    def generate_response(self, *args, **kwargs):
+        return generate_gpt_response(*args, **kwargs)
+
+    def generate_response_with_rag(
+        self,
+        query: str,
+        top_k: int = 5,
+        threshold: float = 0.15,
+        persona: str = "default",
+        temperature: Optional[float] = None,
+        response_length: Optional[str] = None,
+        client=None,
+    ) -> str:
+        """Search the knowledge base and answer using retrieved context."""
+        results, _ = self.search_engine.search(query, top_k=top_k, threshold=threshold, client=client)
+        context = "\n".join(r.get("text", "") for r in results)
+        prompt = f"次の情報を参考にユーザーの質問に答えてください:\n{context}\n\n質問:{query}"
+        return self.generate_response(
+            prompt,
+            conversation_history=[],
+            persona=persona,
+            temperature=temperature,
+            response_length=response_length,
+            client=client,
+        )

@@ -6,7 +6,7 @@ from pathlib import Path
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from knowledge_gpt_app import knowledge_search
+import shared.search_engine as knowledge_search
 
 
 def test_hybrid_search_output_format(monkeypatch):

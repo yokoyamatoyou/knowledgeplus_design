@@ -98,9 +98,18 @@ ensure_nltk_resources()
 
 # 自作モジュールのインポート
 try:
-    from knowledge_search import search_knowledge_base, HybridSearchEngine, ensure_nltk_resources as ensure_nltk_resources_kb
-    from gpt_handler import generate_gpt_response, get_persona_list, load_persona, generate_conversation_title
-    from vector_store import initialize_vector_store
+    from shared.search_engine import (
+        search_knowledge_base,
+        HybridSearchEngine,
+        ensure_nltk_resources as ensure_nltk_resources_kb,
+    )
+    from shared.chat_controller import (
+        generate_gpt_response,
+        get_persona_list,
+        load_persona,
+        generate_conversation_title,
+    )
+    from shared.vector_store import initialize_vector_store
     
     ensure_nltk_resources_kb()
     logger.info("自作モジュールのインポートに成功しました")
