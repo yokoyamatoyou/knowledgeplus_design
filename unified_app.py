@@ -34,13 +34,15 @@ if "search_executed" not in st.session_state:
     st.session_state["search_executed"] = False
 
 if mode == "Search":
-    query = st.text_input(
-        "main_search_box",
-        placeholder="キーワードで検索、またはAIへの質問を入力...",
-        label_visibility="collapsed",
-    )
+    with st.form("search_form", clear_on_submit=False):
+        query = st.text_input(
+            "main_search_box",
+            placeholder="キーワードで検索、またはAIへの質問を入力...",
+            label_visibility="collapsed",
+        )
+        submitted = st.form_submit_button("検索")
 
-    if st.button("検索"):
+    if submitted:
         st.session_state["search_executed"] = True
         kb_names = [kb["name"] for kb in list_knowledge_bases()]
         st.session_state["results"], _ = search_multiple_knowledge_bases(
