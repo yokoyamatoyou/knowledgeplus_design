@@ -24,9 +24,18 @@ def apply_intel_theme(st):
 
     /* メインコンテナ */
     .main .block-container {
+        max-width: 850px;
         padding-top: 2rem;
         padding-bottom: 2rem;
+        padding-left: 1rem;
+        padding-right: 1rem;
         background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
+    }
+
+    /* フォントと背景色 */
+    html, body, [class*="st-"] {
+        background-color: #FFFFFF;
+        color: #3C4043;
     }
 
     /* ヘッダー */
