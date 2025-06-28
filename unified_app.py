@@ -9,57 +9,14 @@ from knowledge_gpt_app.app import (
 )
 from knowledge_gpt_app.gpt_handler import generate_gpt_response
 from ui_modules.thumbnail_editor import display_thumbnail_grid
+from ui_modules.theme import apply_intel_theme
 
 # Global page config and styling
 st.set_page_config(
     layout="wide", page_title="KNOWLEDGE+", initial_sidebar_state="expanded"
 )
 
-st.markdown(
-    """
-    <style>
-    /* Main container styling */
-    .main .block-container {
-        max-width: 850px;
-        padding-top: 2rem;
-        padding-bottom: 2rem;
-        padding-left: 1rem;
-        padding-right: 1rem;
-    }
-    /* General font and color */
-    html, body, [class*="st-"] {
-        background-color: #FFFFFF;
-        color: #3C4043;
-    }
-    /* Search input styling */
-    [data-testid="stTextInput"] input {
-        border-color: #dfe1e5;
-        border-radius: 24px;
-        padding: 10px 20px;
-    }
-    [data-testid="stTextInput"] input:focus {
-        border-color: #1a73e8;
-        box-shadow: 0 0 0 1px #1a73e8;
-    }
-    /* Button styling */
-    [data-testid="stButton"] button {
-        background-color: #1a73e8;
-        color: #FFFFFF;
-        border-radius: 4px;
-        border: none;
-    }
-    /* Card styling */
-    .doc-card {
-        border: 1px solid #dfe1e5;
-        border-radius: 8px;
-        padding: 16px;
-        margin-bottom: 16px;
-        box-shadow: 0 1px 2px 0 rgba(60,64,67,.3);
-    }
-    </style>
-    """,
-    unsafe_allow_html=True,
-)
+apply_intel_theme(st)
 
 st.title("KNOWLEDGE+")
 
