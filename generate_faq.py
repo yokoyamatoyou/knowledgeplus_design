@@ -5,7 +5,6 @@ from pathlib import Path
 from uuid import uuid4
 
 from shared.upload_utils import BASE_KNOWLEDGE_DIR, save_processed_data
-from mm_kb_builder.app import get_embedding
 
 try:
     from openai import OpenAI
@@ -58,7 +57,11 @@ def generate_faqs_from_chunks(kb_name: str, max_tokens: int = 1000, num_pairs: i
                 continue
             faq_id = f"faq_{uuid4().hex}"
             combined = f"Q: {q}\nA: {a}"
-            embedding = get_embedding(combined, client)
+            try:
+                from mm_kb_builder.app import get_embedding as _get_embedding
+            except Exception:
+                raise RuntimeError("Embedding function unavailable")
+            embedding = _get_embedding(combined, client)
             save_processed_data(
                 kb_name,
                 faq_id,

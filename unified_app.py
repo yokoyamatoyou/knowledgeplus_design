@@ -1,3 +1,4 @@
+from pathlib import Path
 import streamlit as st
 from knowledge_gpt_app.app import (
     list_knowledge_bases,
@@ -64,9 +65,19 @@ def render_document_card(doc):
     text = doc.get("text", "")
     excerpt = text[:100]
     st.markdown(
-        f"<div class='doc-card'><strong>{filename}</strong><p>{excerpt}</p></div>",
+        f"<div class='doc-card'><strong>{filename}</strong><p>{excerpt}</p>",
         unsafe_allow_html=True,
     )
+    file_path = doc.get("metadata", {}).get("paths", {}).get("original_file_path")
+    if file_path and Path(file_path).exists():
+        with open(file_path, "rb") as f:
+            st.download_button(
+                "📄 ダウンロード",
+                f.read(),
+                file_name=Path(file_path).name,
+                key=f"download_{file_path}",
+            )
+    st.markdown("</div>", unsafe_allow_html=True)
 
 
 if mode == "Search" and st.session_state.get("search_executed"):
