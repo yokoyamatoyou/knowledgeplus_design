@@ -1,63 +1,46 @@
 # KnowledgePlus
 
-This repository combines a knowledge retrieval chatbot and a multimodal knowledge base builder.
+KnowledgePlus unifies a knowledge base builder with a chatbot interface. The app uses Streamlit and OpenAI embeddings to allow searching, chatting and FAQ generation on your own documents.
 
-## Installation
-
-Create a virtual environment and install the dependencies:
+## Quick Start
 
 ```bash
+# install dependencies
 pip install -r requirements.txt
-```
 
-### Environment Variables
-
-Set your OpenAI API key so the apps can access the API:
-
-```bash
-# macOS/Linux
+# set your OpenAI key
 export OPENAI_API_KEY=your_api_key_here
 
-# Windows
-set OPENAI_API_KEY=your_api_key_here
+# launch the unified interface
+./run_app.sh           # or run_app.bat on Windows
 ```
 
-### Default Knowledge Base
+Uploads and generated data are stored under `knowledge_base/<kb_name>`. The default name is defined by `DEFAULT_KB_NAME` in `config.py`.
 
-Uploads and generated embeddings are stored under `knowledge_base/<kb_name>`.
-The default name is controlled by `DEFAULT_KB_NAME` in `config.py` and is set to
-`"default_kb"`. Change this constant if you want to use a different directory.
+Place the IPAexGothic font (`ipaexg.ttf`) in the repository root so PDF export works correctly.
 
-### Font Requirement
+## Architecture
 
-`knowledge_gpt_app/utils/export.py` needs the IPAexGothic font (`ipaexg.ttf`) to export PDFs. Download the font from [https://moji.or.jp/ipafont/](https://moji.or.jp/ipafont/) and place `ipaexg.ttf` in the repository root.
-
-## Running the Application
-
-Use the helper scripts at the repository root to launch the unified interface:
-
-```bash
-# macOS/Linux
-./run_app.sh
-
-# Windows
-run_app.bat
+```mermaid
+graph TD
+    A[FileProcessor] --> B[KnowledgeBuilder]
+    B --> C[HybridSearchEngine]
+    C --> D[ChatController]
+    D --> E[unified_app.py]
 ```
 
-These scripts run `unified_app.py`, which provides a single entry point for both the chatbot and knowledge base builder.
-
-## Repository Components
-
-- **knowledge_gpt_app** – Streamlit chatbot for searching the knowledge base and chatting with GPT.
-- **mm_kb_builder** – Tools for building a multimodal knowledge base from text, images and CAD files.
-- **unified_app.py** – Central interface that ties both components together.
-
-Design details for the interface and integration plan can be found in [ui_design_plan.md](ui_design_plan.md) and [docs/integration_plan.md](docs/integration_plan.md).
+* **FileProcessor** loads text, images and spreadsheets and extracts searchable text.
+* **KnowledgeBuilder** turns uploaded files into chunks and embeddings stored on disk.
+* **HybridSearchEngine** combines vector and keyword search across the knowledge base.
+* **ChatController** manages conversation history and calls GPT.
+* **unified_app.py** ties everything together with a streamlined UI.
 
 ## Running Tests
 
-Execute the test suite with:
+Run the automated test suite with `pytest`:
 
 ```bash
 pytest -q
 ```
+
+See [ui_design_plan.md](ui_design_plan.md) and [docs/integration_plan.md](docs/integration_plan.md) for detailed design notes.
