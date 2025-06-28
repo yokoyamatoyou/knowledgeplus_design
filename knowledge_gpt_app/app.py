@@ -284,7 +284,7 @@ if "_page_configured" not in st.session_state:
     st.session_state["_page_configured"] = True
 
 # カスタムCSSを適用
-apply_intel_theme()
+apply_intel_theme(st)
 
 st.title("RAGシステム統合ツール")
 

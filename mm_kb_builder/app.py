@@ -45,7 +45,7 @@ if not st.session_state.get("_page_configured", False):
     st.session_state["_page_configured"] = True
 
 # インテル風テーマ適用
-apply_intel_theme()
+apply_intel_theme(st)
 
 # ライブラリチェック
 try:
