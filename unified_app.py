@@ -8,7 +8,7 @@ from knowledge_gpt_app.app import (
     refresh_search_engine,
 )
 from config import DEFAULT_KB_NAME
-from knowledge_gpt_app.gpt_handler import generate_gpt_response
+from shared.chat_controller import generate_gpt_response
 import logging
 from ui_modules.thumbnail_editor import display_thumbnail_grid
 from ui_modules.theme import apply_intel_theme
