@@ -329,6 +329,7 @@ def apply_intel_theme(st):
         padding: 16px;
         margin-bottom: 16px;
         box-shadow: 0 1px 2px 0 rgba(60,64,67,.3);
+        font-size: 10pt;
     }
 
     /* Search input styling */
