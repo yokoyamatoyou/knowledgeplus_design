@@ -1119,7 +1119,7 @@ with tab3:
                             # クエリのベクトル化
                             query_embedding = get_embedding(search_query, client, dimensions=embedding_dims)
                             
-                            if query_embedding:
+                            if query_embedding is not None:
                                 # 類似度計算（分離構造対応）
                                 similarities = []
                                 
@@ -1138,7 +1138,7 @@ with tab3:
                                                 embedding_data = json.load(f)
                                             
                                             doc_embedding = embedding_data.get('vector')
-                                            if doc_embedding and len(doc_embedding) == len(query_embedding):
+                                            if doc_embedding is not None and len(doc_embedding) == len(query_embedding):
                                                 # コサイン類似度計算
                                                 similarity = np.dot(query_embedding, doc_embedding) / (
                                                     np.linalg.norm(query_embedding) * np.linalg.norm(doc_embedding)
