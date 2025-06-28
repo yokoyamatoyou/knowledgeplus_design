@@ -1,6 +1,6 @@
 import os
 import json
-from config import EMBEDDING_MODEL, EMBEDDING_DIMENSIONS
+from config import EMBEDDING_MODEL, EMBEDDING_DIMENSIONS, DEFAULT_KB_NAME
 import numpy as np
 # from sklearn.feature_extraction.text import TfidfVectorizer # BM25には不要
 from sklearn.metrics.pairwise import cosine_similarity
@@ -547,7 +547,7 @@ def get_openai_client_for_kb_search():
 if __name__ == "__main__":
     print("knowledge_search.py を直接実行します (テストモード)")
     script_dir = Path(__file__).resolve().parent
-    default_test_kb_relative_path = "../knowledge_base/default_kb"
+    default_test_kb_relative_path = f"../knowledge_base/{DEFAULT_KB_NAME}"
     test_kb_full_path = (script_dir / default_test_kb_relative_path).resolve()
     print(f"テスト用ナレッジベースのパス: {test_kb_full_path}")
     if not test_kb_full_path.exists() or not test_kb_full_path.is_dir():

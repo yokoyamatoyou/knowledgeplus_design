@@ -2,7 +2,7 @@ import os
 import sys
 import streamlit as st
 from openai import OpenAI
-from config import EMBEDDING_MODEL, EMBEDDING_DIMENSIONS
+from config import EMBEDDING_MODEL, EMBEDDING_DIMENSIONS, DEFAULT_KB_NAME
 import PyPDF2
 import docx
 import pandas as pd
@@ -244,7 +244,7 @@ if 'processed_chunks' not in st.session_state:
 if 'detected_doc_type' not in st.session_state:
     st.session_state['detected_doc_type'] = None
 if 'knowledge_base_name' not in st.session_state:
-    st.session_state['knowledge_base_name'] = "default_kb"
+    st.session_state['knowledge_base_name'] = DEFAULT_KB_NAME
 if 'max_chunk_size' not in st.session_state:
     st.session_state['max_chunk_size'] = 1000
 if 'forced_overlap_ratio' not in st.session_state:

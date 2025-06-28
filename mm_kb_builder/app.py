@@ -1,6 +1,7 @@
 import os
 import sys
 import streamlit as st
+from config import DEFAULT_KB_NAME
 from openai import OpenAI
 import json
 import base64
@@ -637,7 +638,7 @@ def save_unified_knowledge_item(
     try:
         search_chunk = create_comprehensive_search_chunk(analysis_result, user_additions)
         structured_metadata = create_structured_metadata(analysis_result, user_additions, filename)
-        kb_name = "multimodal_knowledge_base"
+        kb_name = DEFAULT_KB_NAME
         image_bytes = base64.b64decode(image_base64) if image_base64 else None
 
         full_metadata = {
@@ -1013,7 +1014,7 @@ with tab3:
     # ナレッジベース選択
     kb_name = st.selectbox(
         "ナレッジベース選択",
-        ["multimodal_knowledge_base"],  # 将来複数KB対応可能
+        [DEFAULT_KB_NAME],  # 将来複数KB対応可能
         index=0
     )
     
