@@ -2,6 +2,9 @@ import os
 import json
 from datetime import datetime
 from openai import OpenAI
+import logging
+
+logger = logging.getLogger(__name__)
 
 # OpenAIクライアントの初期化
 # client = OpenAI(api_key=os.environ.get("OPENAI_API_KEY")) 
@@ -14,7 +17,7 @@ PERSONA_DIR = "./data/personalities"
 def get_openai_client_internal(): # このファイル内でのみ使用するクライアント取得関数
     api_key = os.environ.get("OPENAI_API_KEY")
     if not api_key:
-        print("警告: OPENAI_API_KEYが環境変数に設定されていません (gpt_handler)")
+        logger.warning("OPENAI_API_KEYが環境変数に設定されていません (gpt_handler)")
         return None
     return OpenAI(api_key=api_key)
 
@@ -68,7 +71,7 @@ def get_persona_list():
             persona_data = load_persona(persona_id) # load_personaはIDで読み込む
             persona_details_list.append({"id": persona_id, "name": persona_data.get("name", persona_id)})
         except Exception as e:
-            print(f"Error loading persona details for {persona_id}: {e}")
+            logger.error(f"Error loading persona details for {persona_id}: {e}")
             persona_details_list.append({"id": persona_id, "name": persona_id}) # フォールバック
     
     return persona_details_list
@@ -229,5 +232,5 @@ def generate_conversation_title(conversation_history, client=None):
             return "会話" # フォールバック
         return title
     except Exception as e:
-        print(f"会話タイトル生成中にエラーが発生しました: {e}")
-        return "会話" # エラー時のフォールバックタイトル
+        logger.error(f"会話タイトル生成中にエラーが発生しました: {e}")
+        return "会話"  # エラー時のフォールバックタイトル
