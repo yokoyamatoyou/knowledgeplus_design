@@ -59,8 +59,10 @@ if mode == "Search":
 
 
 def render_document_card(doc):
+    """Render a single document search result as a styled card."""
     filename = doc.get("metadata", {}).get("filename", "N/A")
-    excerpt = doc.get("text", "")[:100]
+    text = doc.get("text", "")
+    excerpt = text[:100]
     st.markdown(
         f"<div class='doc-card'><strong>{filename}</strong><p>{excerpt}</p></div>",
         unsafe_allow_html=True,
