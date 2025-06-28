@@ -4,6 +4,9 @@ import uuid
 from datetime import datetime
 import openai
 from pathlib import Path
+import logging
+
+logger = logging.getLogger(__name__)
 
 # 会話保存ディレクトリ
 CONVERSATION_DIR = Path("data/conversations")
@@ -96,7 +99,7 @@ def list_conversations():
                     "date": data.get("date", "不明な日時")
                 })
         except Exception as e:
-            print(f"会話ファイル読み込みエラー {conversation_file}: {e}")
+            logger.error(f"会話ファイル読み込みエラー {conversation_file}: {e}")
     
     # 日付の新しい順にソート
     conversations.sort(key=lambda x: x["date"], reverse=True)
@@ -147,7 +150,7 @@ def auto_generate_title(messages):
         return title
     
     except Exception as e:
-        print(f"タイトル生成エラー: {e}")
+        logger.error(f"タイトル生成エラー: {e}")
         # ユーザーの最初のメッセージから題名を生成（フォールバック）
         first_message = messages[0]["content"] if messages else "会話"
         if len(first_message) > 30:

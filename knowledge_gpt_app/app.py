@@ -72,7 +72,7 @@ if str(repo_root) not in sys.path:
 def ensure_nltk_resources():
     """必要なNLTKリソースが確実にダウンロードされるようにする"""
     try:
-        print("NLTKリソースの確認とダウンロードを開始...")
+        logger.info("NLTKリソースの確認とダウンロードを開始...")
         resources = ['punkt', 'stopwords', 'averaged_perceptron_tagger', 'wordnet', 'omw-1.4']
         for resource in resources:
             try:
@@ -84,14 +84,14 @@ def ensure_nltk_resources():
                      nltk.data.find(f'corpora/{resource}')
                 else:
                      nltk.data.find(resource)
-                print(f"リソース '{resource}' は既にダウンロード済みです")
+                logger.info(f"リソース '{resource}' は既にダウンロード済みです")
             except LookupError:
-                print(f"リソース '{resource}' をダウンロード中...")
+                logger.info(f"リソース '{resource}' をダウンロード中...")
                 nltk.download(resource, quiet=True)
-                print(f"リソース '{resource}' のダウンロードが完了しました")
+                logger.info(f"リソース '{resource}' のダウンロードが完了しました")
         return True
     except Exception as e:
-        print(f"NLTKリソースのダウンロード中にエラーが発生しました: {e}")
+        logger.error(f"NLTKリソースのダウンロード中にエラーが発生しました: {e}")
         return False
 
 ensure_nltk_resources()
@@ -103,9 +103,9 @@ try:
     from vector_store import initialize_vector_store
     
     ensure_nltk_resources_kb()
-    print("自作モジュールのインポートに成功しました")
+    logger.info("自作モジュールのインポートに成功しました")
 except Exception as e:
-    print(f"自作モジュールのインポートに失敗しました: {e}")
+    logger.error(f"自作モジュールのインポートに失敗しました: {e}")
     traceback.print_exc()
 
 # ロギング設定
@@ -140,7 +140,7 @@ GPT4_MINI_MODEL = "gpt-4.1-mini-2025-04-14"
 # 共通ナレッジベースディレクトリ
 BASE_KNOWLEDGE_DIR = SHARED_KB_DIR
 BASE_KNOWLEDGE_DIR.mkdir(exist_ok=True)
-print(f"Knowledge base directory: {BASE_KNOWLEDGE_DIR}")
+logger.info(f"Knowledge base directory: {BASE_KNOWLEDGE_DIR}")
 
 # 互換のための変数名
 RAG_BASE_DIR = BASE_KNOWLEDGE_DIR
@@ -150,7 +150,7 @@ DATA_DIR = current_dir / "data"
 DATA_DIR.mkdir(exist_ok=True)
 CONVERSATION_DIR = DATA_DIR / "conversations"
 CONVERSATION_DIR.mkdir(exist_ok=True)
-print(f"会話データディレクトリ: {CONVERSATION_DIR}")
+logger.info(f"会話データディレクトリ: {CONVERSATION_DIR}")
 
 
 # === 会話管理関数 ===
@@ -441,7 +441,7 @@ def safe_tokenize(text):
             if not tokens: tokens = ["dummy_token"]
         return tokens
     except Exception as e:
-        print(f"NLTKトークン化エラー: {e}")
+        logger.error(f"NLTKトークン化エラー: {e}")
         tokens = re.findall(r'\b\w+\b', text)
         if not tokens: tokens = ["dummy_token"]
         return tokens

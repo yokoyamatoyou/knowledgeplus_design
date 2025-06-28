@@ -4,13 +4,16 @@ import shutil
 from pathlib import Path
 import subprocess
 import sys
+import logging
+
+logger = logging.getLogger(__name__)
 
 # 実行ファイル名
 EXE_NAME = "ナレッジGPT"
 
 def build_executable():
     """Streamlitアプリケーションを実行ファイル化"""
-    print("====== ナレッジGPTアプリケーションをEXE化します ======")
+    logger.info("====== ナレッジGPTアプリケーションをEXE化します ======")
     
     # 必要なディレクトリを作成
     build_dir = Path("build")
@@ -38,14 +41,14 @@ def build_executable():
         "--hidden-import=fpdf",
     ]
     
-    print("PyInstallerを実行中...")
+    logger.info("PyInstallerを実行中...")
     PyInstaller.__main__.run(pyinstaller_args)
     
-    print("ランチャースクリプトを作成中...")
+    logger.info("ランチャースクリプトを作成中...")
     create_launcher()
     
-    print("====== ビルド完了 ======")
-    print(f"実行ファイル: dist/{EXE_NAME}.exe")
+    logger.info("====== ビルド完了 ======")
+    logger.info(f"実行ファイル: dist/{EXE_NAME}.exe")
 
 def create_launcher():
     """
@@ -67,7 +70,7 @@ start "" "{EXE_NAME}.exe"
     with open(launcher_path, 'w', encoding='utf-8') as f:
         f.write(batch_content)
     
-    print(f"ランチャー作成完了: {launcher_path}")
+    logger.info(f"ランチャー作成完了: {launcher_path}")
 
 def check_dependencies():
     """必要な依存パッケージをチェック"""
@@ -91,17 +94,17 @@ def check_dependencies():
             missing_packages.append(package)
     
     if missing_packages:
-        print("以下の必要なパッケージがインストールされていません:")
+        logger.warning("以下の必要なパッケージがインストールされていません:")
         for pkg in missing_packages:
-            print(f"  - {pkg}")
+            logger.info(f"  - {pkg}")
         
         install = input("これらのパッケージをインストールしますか？ (y/n): ")
         if install.lower() == 'y':
             for pkg in missing_packages:
                 subprocess.check_call([sys.executable, "-m", "pip", "install", pkg])
-            print("依存パッケージのインストールが完了しました。")
+            logger.info("依存パッケージのインストールが完了しました。")
         else:
-            print("依存パッケージをインストールしないとビルドできません。")
+            logger.warning("依存パッケージをインストールしないとビルドできません。")
             return False
     
     return True
@@ -115,15 +118,15 @@ def check_resources():
     # アイコンファイルをチェック
     icon_path = resources_dir / "app_icon.ico"
     if not icon_path.exists():
-        print("アプリケーションアイコンが見つかりません。デフォルトアイコンを作成します。")
+        logger.warning("アプリケーションアイコンが見つかりません。デフォルトアイコンを作成します。")
         create_default_icon(icon_path)
     
     # フォントファイルをチェック
     font_path = Path("ipaexg.ttf")
     if not font_path.exists():
-        print("日本語フォントファイル（ipaexg.ttf）が見つかりません。")
-        print("以下のURLからダウンロードしてプロジェクトルートに配置してください:")
-        print("https://moji.or.jp/ipafont/")
+        logger.warning("日本語フォントファイル（ipaexg.ttf）が見つかりません。")
+        logger.warning("以下のURLからダウンロードしてプロジェクトルートに配置してください:")
+        logger.warning("https://moji.or.jp/ipafont/")
         return False
     
     return True
@@ -131,20 +134,20 @@ def check_resources():
 def create_default_icon(icon_path):
     """デフォルトのアイコンファイルを作成（ダミー）"""
     # 実際には何もしないが、本来はデフォルトアイコンを生成するコードが入る
-    print("注意: アイコンファイルが作成されていません。Windowsのデフォルトアイコンが使用されます。")
+    logger.warning("注意: アイコンファイルが作成されていません。Windowsのデフォルトアイコンが使用されます。")
 
 def main():
     """メイン実行関数"""
-    print("ナレッジGPTアプリケーションのEXE化ツール")
+    logger.info("ナレッジGPTアプリケーションのEXE化ツール")
     
     # 依存パッケージをチェック
     if not check_dependencies():
-        print("依存パッケージエラーのため、ビルドを中止します。")
+        logger.error("依存パッケージエラーのため、ビルドを中止します。")
         return
     
     # リソースファイルをチェック
     if not check_resources():
-        print("リソースファイルエラーのため、ビルドを中止します。")
+        logger.error("リソースファイルエラーのため、ビルドを中止します。")
         return
     
     # 実行ファイルをビルド

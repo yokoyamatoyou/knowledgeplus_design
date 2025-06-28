@@ -1,5 +1,8 @@
 """Download required NLTK resources."""
 import nltk
+import logging
+
+logger = logging.getLogger(__name__)
 
 RESOURCES = [
     "punkt",
@@ -12,4 +15,4 @@ RESOURCES = [
 for resource in RESOURCES:
     nltk.download(resource)
 
-print("NLTK resource download completed.")
+logger.info("NLTK resource download completed.")
