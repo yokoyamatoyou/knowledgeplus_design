@@ -145,6 +145,50 @@ if mode == "Upload":
     st.divider()
     display_thumbnail_grid(DEFAULT_KB_NAME)
 elif mode == "Chat":
-    st.info("Chat mode is under construction.")
+    if "chat_history" not in st.session_state:
+        st.session_state["chat_history"] = []
+
+    for msg in st.session_state["chat_history"]:
+        with st.chat_message(msg["role"]):
+            st.markdown(msg["content"])
+
+    user_msg = st.chat_input("メッセージを送信")
+    if user_msg:
+        st.session_state["chat_history"].append({"role": "user", "content": user_msg})
+        results, _ = search_multiple_knowledge_bases(user_msg, [DEFAULT_KB_NAME])
+        context = "\n".join(r.get("text", "") for r in results[:3])
+        client = get_openai_client()
+        if client:
+            prompt = f"次の情報を参考にユーザーの質問に答えてください:\n{context}\n\n質問:{user_msg}"
+            answer = safe_generate_gpt_response(
+                prompt,
+                conversation_history=[
+                    {"role": m["role"], "content": m["content"]}
+                    for m in st.session_state["chat_history"][:-1]
+                    if m["role"] in ("user", "assistant")
+                ],
+                persona="default",
+                temperature=0.3,
+                response_length="普通",
+                client=client,
+            )
+        else:
+            answer = "OpenAIクライアントを初期化できませんでした。"
+        st.session_state["chat_history"].append({"role": "assistant", "content": answer})
+        st.rerun()
 elif mode == "FAQ":
-    st.info("FAQ generation is under construction.")
+    st.subheader("FAQ作成")
+    kb_name = st.text_input("Knowledge base name", value=DEFAULT_KB_NAME)
+    max_tokens = st.number_input("Max tokens per chunk", 100, 2000, 1000, 100)
+    pairs = st.number_input("Pairs per chunk", 1, 10, 3, 1)
+    if st.button("FAQ生成", type="primary"):
+        with st.spinner("FAQを生成中..."):
+            from generate_faq import generate_faqs_from_chunks
+
+            client = get_openai_client()
+            if client:
+                count = generate_faqs_from_chunks(kb_name, max_tokens, pairs, client=client)
+                refresh_search_engine(kb_name)
+                st.success(f"{count} FAQs generated")
+            else:
+                st.error("OpenAIクライアントが利用できません")

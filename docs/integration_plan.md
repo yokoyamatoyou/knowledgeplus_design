@@ -210,6 +210,13 @@ without altering existing data or indexes.
   - Record results for each phase in this file after tests run so that the state before coding is preserved.
   - Update the README with instructions on how to run the test suite using `pytest`.
 
+### Phase 6 Implementation
+
+The chat and FAQ interfaces have been enabled in `unified_app.py`. Chat mode keeps
+conversation history in the session and answers using search results from the
+knowledge base. FAQ mode calls `generate_faqs_from_chunks()` and refreshes the
+index so generated questions become searchable.
+
 ### Additional Repository Guidance
 
 The following notes summarize recent advice and checks to keep this repository consistent.
