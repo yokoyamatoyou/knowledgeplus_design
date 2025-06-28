@@ -18,6 +18,7 @@ export OPENAI_API_KEY=your_api_key_here
 Uploads and generated data are stored under `knowledge_base/<kb_name>`. The default name is defined by `DEFAULT_KB_NAME` in `config.py`.
 
 Place the IPAexGothic font (`ipaexg.ttf`) in the repository root so PDF export works correctly.
+Run `python knowledge_gpt_app/nltk_download.py` once to download NLTK resources.
 
 ## Architecture
 
