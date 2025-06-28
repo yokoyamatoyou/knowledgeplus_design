@@ -20,6 +20,15 @@ Uploads and generated data are stored under `knowledge_base/<kb_name>`. The defa
 Place the IPAexGothic font (`ipaexg.ttf`) in the repository root so PDF export works correctly.
 Run `python knowledge_gpt_app/nltk_download.py` once to download NLTK resources.
 
+## Interface Overview
+
+The sidebar offers four modes:
+
+- **Upload** – add documents or images to the knowledge base.
+- **Search** – query the knowledge base with keyword and semantic search.
+- **Chat** – ask questions in a conversational format.
+- **FAQ** – generate frequently asked questions from stored content.
+
 ## Architecture
 
 ```mermaid
