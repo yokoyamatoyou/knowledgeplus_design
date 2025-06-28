@@ -195,3 +195,4 @@ cython_debug/
 # Sample images for KB builder
 mm_kb_builder/multimodal_data/multimodal_knowledge_base/images/
 
+knowledge_gpt_app/rag_tool.log
