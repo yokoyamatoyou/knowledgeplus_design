@@ -45,3 +45,10 @@ pytest -q
 ```
 
 See [ui_design_plan.md](ui_design_plan.md) and [docs/integration_plan.md](docs/integration_plan.md) for detailed design notes.
+
+## Developer Notes
+
+Item IDs used by the thumbnail editor correspond to the metadata filename
+without the `.json` extension. Upload helpers may prefix these filenames, so a
+thumbnail ID can look like `metadata_1`. When editing metadata manually, use the
+same ID shown in the grid.
