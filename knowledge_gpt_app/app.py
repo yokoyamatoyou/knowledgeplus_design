@@ -60,6 +60,17 @@ from shared.upload_utils import (
 from generate_faq import generate_faqs_from_chunks
 from ui_modules.theme import apply_intel_theme
 
+# ロギング設定を最初に行う
+logging.basicConfig(
+    level=logging.INFO,
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    handlers=[
+        logging.FileHandler("rag_tool.log", encoding='utf-8'),
+        logging.StreamHandler(),
+    ],
+)
+logger = logging.getLogger("rag_tool")
+
 # スクリプトディレクトリの解決
 current_dir = Path(__file__).resolve().parent
 
@@ -116,17 +127,6 @@ try:
 except Exception as e:
     logger.error(f"自作モジュールのインポートに失敗しました: {e}")
     traceback.print_exc()
-
-# ロギング設定
-logging.basicConfig(
-    level=logging.INFO,
-    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
-    handlers=[
-        logging.FileHandler("rag_tool.log", encoding='utf-8'),
-        logging.StreamHandler()
-    ]
-)
-logger = logging.getLogger('rag_tool')
 
 # OpenAIクライアントを取得する関数 (app.py内で共通して使用)
 @st.cache_resource
@@ -299,7 +299,8 @@ st.title("RAGシステム統合ツール")
 
 # アプリケーションモード選択
 mode_options = ["ナレッジ検索", "ナレッジ構築", "FAQ作成", "chatGPT"]
-app_mode_index = mode_options.index(st.session_state['app_mode']) if st.session_state['app_mode'] in mode_options else 0
+current_mode = st.session_state.get('app_mode', 'ナレッジ検索')
+app_mode_index = mode_options.index(current_mode) if current_mode in mode_options else 0
 app_mode = st.sidebar.radio(
     "モード選択",
     mode_options,
