@@ -349,6 +349,7 @@ def apply_intel_theme(st):
         color: #FFFFFF;
         border-radius: 4px;
         border: none;
+        font-size: 10pt;
     }
 
     /* 縦線区切り */
