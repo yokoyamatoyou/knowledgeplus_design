@@ -22,6 +22,12 @@ export OPENAI_API_KEY=your_api_key_here
 set OPENAI_API_KEY=your_api_key_here
 ```
 
+### Default Knowledge Base
+
+Uploads and generated embeddings are stored under `knowledge_base/<kb_name>`.
+The default name is controlled by `DEFAULT_KB_NAME` in `config.py` and is set to
+`"default_kb"`. Change this constant if you want to use a different directory.
+
 ### Font Requirement
 
 `knowledge_gpt_app/utils/export.py` needs the IPAexGothic font (`ipaexg.ttf`) to export PDFs. Download the font from [https://moji.or.jp/ipafont/](https://moji.or.jp/ipafont/) and place `ipaexg.ttf` in the repository root.

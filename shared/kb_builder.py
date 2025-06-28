@@ -6,6 +6,7 @@ from typing import Dict, Any
 
 from .file_processor import FileProcessor
 from .upload_utils import save_processed_data
+from config import DEFAULT_KB_NAME
 
 logger = logging.getLogger(__name__)
 
@@ -91,7 +92,7 @@ class KnowledgeBuilder:
         chunk_id = str(uuid.uuid4())
         metadata = {"filename": uploaded_file.name, "type": "text_chunk"}
         paths = save_processed_data(
-            "multimodal_knowledge_base",
+            DEFAULT_KB_NAME,
             chunk_id,
             chunk_text=text,
             embedding=embedding,
@@ -99,7 +100,7 @@ class KnowledgeBuilder:
             original_filename=uploaded_file.name,
             original_bytes=uploaded_file.getvalue(),
         )
-        self.refresh_search_engine("multimodal_knowledge_base")
+        self.refresh_search_engine(DEFAULT_KB_NAME)
         return {"id": chunk_id, **paths}
 
 

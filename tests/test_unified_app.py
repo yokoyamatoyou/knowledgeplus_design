@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
+from config import DEFAULT_KB_NAME
 
 def test_sidebar_has_faq_button():
     text = Path('unified_app.py').read_text(encoding='utf-8')
@@ -17,5 +18,5 @@ def test_sidebar_has_faq_button():
 def test_manual_refresh_call_present():
     text = Path('unified_app.py').read_text(encoding='utf-8')
     import re
-    pattern = r'if st\.button\("検索インデックス更新"\).*refresh_search_engine\("default_kb"\)'
+    pattern = r'if st\.button\("検索インデックス更新"\).*refresh_search_engine\(DEFAULT_KB_NAME\)'
     assert re.search(pattern, text, re.DOTALL)
