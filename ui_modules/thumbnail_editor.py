@@ -8,7 +8,12 @@ from shared.upload_utils import BASE_KNOWLEDGE_DIR, save_user_metadata
 
 
 def _load_items(kb_name: str) -> List[Dict[str, Any]]:
-    """Load stored items for the given knowledge base."""
+    """Load stored items for the given knowledge base.
+
+    The returned ``id`` for each item matches the metadata filename without the
+    ``.json`` extension. Some upload helpers prefix this filename (e.g.,
+    ``metadata_1``), so the ID may include that prefix.
+    """
     items = []
     meta_dir = BASE_KNOWLEDGE_DIR / kb_name / "metadata"
     if not meta_dir.exists():
