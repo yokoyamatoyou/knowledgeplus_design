@@ -9,8 +9,18 @@ from knowledge_gpt_app.app import (
 )
 from config import DEFAULT_KB_NAME
 from knowledge_gpt_app.gpt_handler import generate_gpt_response
+import logging
 from ui_modules.thumbnail_editor import display_thumbnail_grid
 from ui_modules.theme import apply_intel_theme
+
+# Wrapper to call generate_gpt_response with error handling
+def safe_generate_gpt_response(*args, **kwargs):
+    try:
+        return generate_gpt_response(*args, **kwargs)
+    except Exception as e:  # pragma: no cover - logging side effect
+        logging.exception("generate_gpt_response failed: %s", e)
+        st.error("要約生成中にエラーが発生しました。")
+        return None
 
 # Global page config and styling
 st.set_page_config(
@@ -72,7 +82,7 @@ if mode == "Search" and st.session_state.get("search_executed"):
                     f"次の情報から質問『{st.session_state.get('last_query','')}』への"
                     f"要約回答を生成してください:\n{context}"
                 )
-                summary = generate_gpt_response(
+                summary = safe_generate_gpt_response(
                     prompt,
                     conversation_history=[],
                     persona="default",
@@ -80,7 +90,8 @@ if mode == "Search" and st.session_state.get("search_executed"):
                     response_length="簡潔",
                     client=client,
                 )
-                st.write(summary)
+                if summary is not None:
+                    st.write(summary)
             else:
                 st.info("要約生成に失敗しました。")
         else:
